@@ -30,15 +30,34 @@ lock_taper      = 1.2;   // Ramp length on the locking tab (mm)
 lock_width      = 8.0;   // Width of the tab engagement surface (mm)
 lock_protrusion = 1.0;   // Total tab lip span (radial); 0.25 embeds in the rim, 0.75 sticks out (mm)
 
-/* [Legacy — removed in phase 2] */
-shaft_radius = 8;  // Old male-insert radius; only lock_channel still references it
+/* [Cap & Lock Channel (phase 2)] */
+cap_radius    = 53.0;  // Ø106 / 2: cap disc and skirt outer radius (mm)
+cap_disc_h    = 2.5;   // Disc thickness (light-side mounting face) (mm)
+cap_skirt_h   = 14.0;  // Skirt depth: ceiling edge down to the disc (mm)
+
+ch_ang_rot    = -10;   // Channel fold-copy axis, 10° behind the tab at drop (deg)
+ch_clear      = 0.2;   // Radial clearance to the tab outer face (mm)
+ch_back_wall  = -5.2;  // Groove back wall (fold-local deg): seats the tab back edge
+ch_front      = 15.2;  // Groove open entrance (fold-local deg): clears the tab at drop
+ch_roof_end   = 4.8;   // Roof front edge (fold-local deg): free drop, captured at seat
+ch_roof_in    = 50.4;  // Roof overhang inner radius: captures the tab's outer lip (mm)
+ch_groove_bot = 12.3;  // Groove floor (mount-local z): tab base − clearance
+ch_groove_top = 13.8;  // Groove ceiling (mount-local z): 1.5 over the tab base
+ch_block_top  = 14.4;  // Channel block top (mount-local z): roof thickness 0.6
 
 // ============================================================
 // Entry point
 // ============================================================
 
+// Skirt top (cap_disc_h + cap_skirt_h above the mount origin) meets the base
+// ceiling face (assembled base top = 2 + plate_thickness).
+mount_offset_z = (2 + plate_thickness) - (cap_disc_h + cap_skirt_h);
+
 if (view_mode == "assembled") {
-    mount_plate();
+    // Mount shown seated: rotate +10° (= −ch_ang_rot) from the drop pose
+    rotate([0, 0, -ch_ang_rot])
+        translate([0, 0, mount_offset_z])
+            mount_plate();
     translate([0, 0, 2])
         base_plate();
 }
@@ -57,8 +76,11 @@ else if (view_mode == "lock_channel_linear") {
 else if (view_mode == "diff_check") {
     color("red")
     intersection() {
-        mount_plate();
-        base_plate();
+        rotate([0, 0, -ch_ang_rot])
+            translate([0, 0, mount_offset_z])
+                mount_plate();
+        translate([0, 0, 2])
+            base_plate();
     }
 }
 
@@ -125,30 +147,66 @@ module lock_tab_linear() {
 // ============================================================
 
 module mount_plate() {
-    socket_radius = shaft_radius + tolerance + lock_protrusion;
+    boss_r    = 4.75;   // Ø9.5 central boss (light-side, spotlight mount)
+    boss_h    = 5.0;
+    pilot_r   = 1.45;   // Ø2.9 pilot hole through the boss
+    wire_off  = 12.0;   // Ø8 wire-exit hole center radius
+    wire_r    = 4.0;
     union() {
         difference() {
-            cylinder(h = 4, r = plate_radius, center = true);
-            cylinder(h = 5, r = socket_radius, center = true);
+            union() {
+                cylinder(h = cap_disc_h, r = cap_radius);
+                translate([0, 0, cap_disc_h])
+                    cylinder(h = cap_skirt_h, r = cap_radius);
+                translate([0, 0, -boss_h])
+                    cylinder(h = boss_h + cap_disc_h, r = boss_r);
+            }
+            // Hollow cup: open interior under the disc, skirt top open to the ceiling
+            translate([0, 0, cap_disc_h - 0.1])
+                cylinder(h = cap_skirt_h + 0.2, r = plate_radius + 1.0);
+            translate([0, 0, -boss_h - 1])
+                cylinder(h = boss_h + cap_disc_h + 2, r = pilot_r);
+            translate([wire_off, 0, -1])
+                cylinder(h = cap_disc_h + 2, r = wire_r);
         }
-        translate([0, 0, 2])
-            lock_channel();
-        translate([0, 0, -5])
-            cylinder(h = 3, r = plate_radius);
+        // Rim lock channels engaging the base-plate tabs (restore the channel region)
+        lock_channel();
     }
 }
 
 module lock_channel() {
-    bend_r = shaft_radius + lock_protrusion + tolerance;
-    threefold_pattern() {
-        translate([-bend_r, 0, 0])
-            rotate([0, 90, 0])
-                cylindric_bend([10, 10, 10], bend_r, nsteps = bend_steps)
-                    translate([2, 7, 0])
-                        rotate([0, -90, 0])
-                            rotate([0, 0, -90])
-                                lock_channel_linear();
+    threefold_pattern()
+        rotate([0, 0, ch_ang_rot])
+            rim_channel();
+}
+
+module rim_channel() {
+    // One groove: outer wall ring + roof overhang (back 10°) + back-wall slab.
+    // Tab (measured at rim): outer r 50.75, angular ±5°, wedge crest 0.75–1.6
+    // (tallest at the root near r 50.1). Groove void = r[50.2,50.95] × z[bot,top]
+    // × angular [back_wall, front]; the roof starts at r 50.4 to clear the tab's
+    // inner crest during rotation while capturing its outer lip against pullout.
+    r_groove_in = plate_radius + ch_clear;              // 50.2
+    r_wall      = 50.75 + ch_clear;                     // 50.95
+    r_outer     = cap_radius;
+    union() {
+        annular_segment(r_wall, r_outer, ch_groove_bot, ch_block_top, ch_back_wall, ch_front);
+        annular_segment(ch_roof_in, r_wall, ch_groove_top, ch_block_top, ch_back_wall, ch_roof_end);
+        annular_segment(r_groove_in, r_wall, ch_groove_bot, ch_groove_top, ch_back_wall - 0.5, ch_back_wall);
     }
+}
+
+// Annular sector r1<=r<=r2, z z1..z2, angles a1..a2 (deg, around +X).
+// Arcs sampled so the chord sagitta stays below ~0.04mm (2° steps at r~51).
+module annular_segment(r1, r2, z1, z2, a1, a2) {
+    n = max(2, ceil(abs(a2 - a1) / 2));
+    outer = [for (i = [0 : n]) let(a = a1 + (a2 - a1) * i / n)
+                 [r2 * cos(a), r2 * sin(a)]];
+    inner = [for (i = [0 : n]) let(a = a2 - (a2 - a1) * i / n)
+                 [r1 * cos(a), r1 * sin(a)]];
+    translate([0, 0, z1])
+        linear_extrude(height = z2 - z1)
+            polygon(concat(outer, inner));
 }
 
 module lock_channel_linear() {

@@ -74,7 +74,7 @@ shaft-based lock entirely; all lock geometry moves to the outer rim.
 | Phase | Title | Status | Notes |
 |---|---|---|---|
 | 1 | Base plate rebuild (Ø100 annulus + rim tabs + rim bend) | done | Rim bend re-derived (bend_r=51); tab tip r=50.75 at 0°/120°/240°. See NOTES for constants + 2 deviations |
-| 2 | Mount plate cap rebuild (Ø106 cap + channels + boss) | pending | Depends on phase 1 bend constants |
+| 2 | Mount plate cap rebuild (Ø106 cap + channels + boss) | done | Cap + rim channels + boss; engagement verified by STL intersection sweep vs real base (see NOTES) |
 | 3 | Assembly, renders, docs | pending | Depends on phases 1-2 |
 
 Status values: `pending`, `in-progress`, `done`.

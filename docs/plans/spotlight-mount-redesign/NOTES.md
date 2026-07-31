@@ -107,3 +107,53 @@ Suggested entry format:
   replaces them and removes `shaft_radius`).
 
 ---
+
+## Phase 2 (mount plate cap rebuild) — done
+- **Cap geometry:** Ø106 (r=53) disc (h=2.5) + 14mm skirt + central boss
+  Ø9.5×5 with Ø2.9 pilot + Ø8 wire exit at r=12. Skirt top reaches the
+  ceiling face (`mount_offset_z = (2+plate_thickness) − (cap_disc_h +
+  cap_skirt_h)` = −10.5); `assembled`/`diff_check` seat the mount with
+  `rotate([0,0,-ch_ang_rot])` (+10°).
+- **Ground truth vs phase-1 assumption:** the real protruding tab lip is LOW,
+  not z[0,2]. Point-in-mesh probes of the phase-1 base render (fold center):
+  r>50.15 material only z[0,~0.8]; crest profile r50.10→1.60, 50.25→1.40,
+  50.35→1.30, 50.45→1.15, 50.55→1.05, 50.65→0.90, 50.75→0.75 (a wedge);
+  angular extent ±4°–4.9°. The earlier "z[0,2]" measurement included the
+  inner ramp root (r 49.7–50.1). Channel sized from the crest profile, not
+  the nominal 2.0.
+- **`rim_channel()` direct geometry** (annular-sector union, fold-local):
+  outer wall ring r[50.95,53] z[0,2.1] ang[−5.2,15.2]; roof overhang
+  r[50.4,50.95] z[1.5,2.1] ang[−5.2,4.8]; back-wall slab r[50.2,50.95]
+  z[0,1.5] ang[−5.7,−5.2]. Threefold at `ch_ang_rot=−10`. Params:
+  `ch_back_wall −5.2`, `ch_front 15.2`, `ch_roof_end 4.8`, `ch_roof_in 50.4`,
+  `ch_groove_bot/top 12.3/13.8` (mount-local), `ch_block_top 14.4`.
+- **Roof must start at r=50.4 (not 50.2):** the tab's inner crest (1.3–1.6 at
+  r≤50.35) would hit a roof that reaches to 50.2 during the 10° twist; at
+  50.4 the under-roof crest is ≤1.2, giving 0.3mm clearance and capturing the
+  outer lip (0.75–1.15 crest) with ~0.3mm pullout play.
+- **Bug caught:** a difference-based `rim_channel()` (full block minus groove
+  void) lets the void carve away the back-wall slab → no stop face, all
+  intersection volumes 0. Fix = union form with an explicit back-wall slab
+  (`annular_segment(..., back_wall−0.5, back_wall)`).
+- **`annular_segment`** samples arcs at 2° steps so the chord stays above the
+  radius (sagitta <0.04mm). Early draft included the origin in the polygon
+  (pie fill) and sagging chords → false geometry.
+- **Verification vs the real parts** (`use <base.scad>` harness,
+  intersection volume via scan.py; tab lifted with `translate([0,0,lift])
+  base_plate()`): rotation sweep rel_rot −15..+25 → 0.0000 at −15..+10,
+  0.83 @ +15, 0.68 @ +20, 0 @ +25 (free travel, hard back-wall stop);
+  pullout at seat (rel_rot=10): free to lift 0.2, blocked from 0.3 (0.02,
+  0.21 @ 0.4, 0.59 @ 0.5, 2.4 @ 0.75, 4.4 @ 1.0); pullout at drop
+  (rel_rot=0): free (0 even at lift 1.0). `diff_check` at seat = empty.
+- **Scan-harness gotchas:** `use <base.scad>` resolves relative to the
+  importing file → harness must sit in the project dir; this openscad build
+  rejects `-I` (prints usage, renders nothing); OpenSCAD writes no STL for an
+  empty intersection (treat missing file as 0 volume); seat pullout needs BOTH
+  `-D rel_rot=10` and `-D tab_lift=...` (running only tab_lift leaves rel_rot=0
+  = drop, which is free).
+- `shaft_radius` removed; `lock_channel_linear()` kept for debugging;
+  `mount_plate`/`lock_channel` fully replaced. Render of the cap: Ø106,
+  bbox z[−5,16.5]; assembled bbox z[−15.5,6].
+
+
+---
