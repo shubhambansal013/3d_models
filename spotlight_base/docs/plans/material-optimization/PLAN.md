@@ -40,7 +40,7 @@ or hardware change.
 
 | Phase | Title | Status | Notes |
 |---|---|---|---|
-| 1 | Base plate ring pocket | pending | |
+| 1 | Base plate ring pocket | done | base 23.359→17.523 cm³ (−25%), verified |
 | 2 | Mount plate lip fillet | pending | |
 | 3 | Mount plate disc pocket + full verification | pending | final renders + STL volume comparison |
 

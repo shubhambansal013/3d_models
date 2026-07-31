@@ -9,10 +9,14 @@ view_mode = "assembled"; // [assembled, base_plate, mount_plate, lock_tab_linear
 $fn       = 72;          // Curved-surface resolution
 
 /* [Plate Dimensions] */
-plate_radius     = 50.0;  // Outer radius of the base plate annulus (mm)
-plate_thickness  = 4.0;   // Thickness of the base plate (mm)
-wire_hole_radius = 25.0;  // Radius of the central wire through-hole (mm)
-bend_steps       = 24;    // Segment count for the cylindrical bend
+plate_radius      = 50.0;  // Outer radius of the base plate annulus (mm)
+plate_thickness   = 4.0;   // Thickness of the base plate (mm)
+wire_hole_radius  = 25.0;  // Radius of the central wire through-hole (mm)
+base_pocket_depth = 2.0;   // Underside lightening pocket depth (mm); leaves 2mm ceiling-side skin
+base_pocket_inner = 28.0;  // Pocket inner radius: clears the Ø50 wire hole (mm)
+base_pocket_outer = 42.0;  // Pocket outer radius: clears the tab roots at r43 (mm)
+base_pocket_boss_r = 5.0;  // Full-depth circle kept around each screw (mm)
+bend_steps        = 24;    // Segment count for the cylindrical bend
 
 /* [Screw Holes] */
 screw_hole_radius   = 35.0;       // Radius of the M3 screw hole centers (mm)
@@ -98,6 +102,8 @@ module base_plate() {
             rotate([0, 0, a])
                 translate([screw_hole_radius, 0, 0])
                     screw_hole();
+        // Underside (light-side) ring pocket to save filament
+        base_pocket();
     }
     // 3 rim-mounted lock tabs at 0°/120°/240°
     lock_tab();
@@ -108,6 +114,21 @@ module screw_hole() {
     translate([0, 0, -1])
         cylinder(h = plate_thickness + 2, r = screw_through_r);
     cylinder(h = screw_counterbore_d, r = screw_counterbore_r);
+}
+
+// Underside (light side) ring pocket to save filament. Screw bosses keep
+// full plate thickness so the counterbores stay flush and the ceiling
+// side remains a flat 2mm skin.
+module base_pocket() {
+    translate([0, 0, -1])
+        difference() {
+            cylinder(h = base_pocket_depth + 1, r = base_pocket_outer);
+            cylinder(h = base_pocket_depth + 2, r = base_pocket_inner);
+            for (a = screw_angles)
+                rotate([0, 0, a])
+                    translate([screw_hole_radius, 0, 0])
+                        cylinder(h = base_pocket_depth + 2, r = base_pocket_boss_r);
+        }
 }
 
 module lock_tab() {

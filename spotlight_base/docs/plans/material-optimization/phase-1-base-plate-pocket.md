@@ -18,7 +18,7 @@ measured before the mount plate edits land in the same file.
 - Does NOT touch `mount_plate()`, lock geometry, or any existing parameter values.
 
 ## Todos
-- [ ] In the `Plate Dimensions` block (after `wire_hole_radius`, base.scad:14)
+- [x] In the `Plate Dimensions` block (after `wire_hole_radius`, base.scad:14)
       add:
       ```
       base_pocket_depth = 2.0;  // Underside lightening pocket depth (mm); leaves 2mm ceiling-side skin
@@ -26,7 +26,7 @@ measured before the mount plate edits land in the same file.
       base_pocket_outer = 42.0; // Pocket outer radius: clears the tab roots at r43 (mm)
       base_pocket_boss_r = 5.0; // Full-depth circle kept around each screw (mm)
       ```
-- [ ] Add a `base_pocket()` module near `base_plate()` (matches existing
+- [x] Add a `base_pocket()` module near `base_plate()` (matches existing
       module style, comment header):
       ```
       // Underside (light side) ring pocket to save filament. Screw bosses keep
@@ -44,17 +44,17 @@ measured before the mount plate edits land in the same file.
               }
       }
       ```
-- [ ] In `base_plate()`'s `difference()` (base.scad:90–101) add `base_pocket();`
+- [x] In `base_plate()`'s `difference()` (base.scad:90–101) add `base_pocket();`
       after the `screw_hole()` loop.
-- [ ] Sanity: pocket inner 28 > wire_hole_radius 25; outer 42 < tab body root
+- [x] Sanity: pocket inner 28 > wire_hole_radius 25; outer 42 < tab body root
       (~r43); boss r5 covers counterbore (r3.1 → 38.1mm) plus margin at r35.
-- [ ] Render: `xvfb-run -a openscad base.scad -D 'view_mode="base_plate"' -o out.png --viewall --imgsize=1024,1024`
+- [x] Render: `xvfb-run -a openscad base.scad -D 'view_mode="base_plate"' -o out.png --viewall --imgsize=1024,1024`
       and confirm the pocket ring is visible on the light side with full-depth
       bosses at 90°/270°.
-- [ ] Export STL `xvfb-run -a openscad base.scad -D 'view_mode="base_plate"' -o /tmp/base_after.stl`
+- [x] Export STL `xvfb-run -a openscad base.scad -D 'view_mode="base_plate"' -o /tmp/base_after.stl`
       and compute volume (see NOTES.md / phase 3 for the plain-python signed-tetrahedron
       script). Record before/after in NOTES.md.
-- [ ] Optionally render `view_mode="assembled"` to confirm no visual regression.
+- [x] Optionally render `view_mode="assembled"` to confirm no visual regression.
 
 ## Acceptance criteria
 - `base_plate` view renders without warnings and shows the pocket ring.
