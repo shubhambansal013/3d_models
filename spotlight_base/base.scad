@@ -1,107 +1,181 @@
-// ============================================================
-// PARAMETRIC TWIST & LOCK COUPLING v37
-// Refactored and fully parametric
-// ============================================================
+// Spotlight twist-lock mount.
+// The base plate (ceiling side) carries a male insert that locks into the
+// mount plate (light side). The spotlight screws onto the mount plate.
 
 /* [Global & Render Settings] */
-// Select what to render: "assembled", "receptacle", "plug", or "diff_check"
-view_mode   = "assembled"; // [assembled, receptacle, plug, diff_check]
-$fn         = 72;          // Resolution of rounded elements
+view_mode = "assembled"; // [assembled, base_plate, mount_plate, lock_tab_linear, lock_channel_linear, diff_check]
+$fn       = 72;          // Curved-surface resolution
 
-/* [Coupling Fit & Tolerances] */
-plug_radius = 8;  // Core radius of the male plug shaft (mm)
-tolerance   = 0.2;  // Clearance offset for smooth mating (mm)
-mating_dist = 5.0;  // Spacing height when assembled (mm)
+/* [Plate Dimensions] */
+plate_radius     = 50.0;  // Outer radius of the base plate annulus (mm)
+plate_thickness  = 4.0;   // Thickness of the base plate (mm)
+wire_hole_radius = 25.0;  // Radius of the central wire through-hole (mm)
+bend_steps       = 24;    // Segment count for the cylindrical bend
 
-/* [Locking Lip Dimensions] */
-lip_total_height = 3.0;   // Overall height of the locking lip (mm)
-lip_gap_height   = 1.0;   // Vertical slot height for locking channel (mm)
-lip_taper        = 1.2;   // Taper distance along the locking ramp (mm)
-lip_width        = 2.0;   // Width of the locking engagement surface (mm)
-lip_protrude     = 0.75;  // Radial protrude height of locking tabs (mm)
+/* [Screw Holes] */
+screw_hole_radius   = 35.0;       // Radius of the M3 screw hole centers (mm)
+screw_angles        = [90, 270];  // Angular positions of the screw holes (deg)
+screw_through_r     = 1.7;        // Through-hole radius for M3 (Ø3.4, mm)
+screw_counterbore_r = 3.1;        // Counterbore radius for socket-head M3 (Ø6.2, mm)
+screw_counterbore_d = 3.0;        // Counterbore depth (mm)
 
-/* [Base Flange Settings] */
-flange_radius    = 10.0;  // Radius of the outer mounting plates (mm)
-bend_steps       = 20;    // Step resolution for cylindrical bend function
+/* [Fit & Tolerances] */
+tolerance    = 0.2;  // Clearance added to the female side for smooth mating (mm)
+assembly_gap = 5.0;  // Vertical spacing between the plates when assembled (mm)
+
+/* [Lock Geometry] */
+lock_height     = 3.0;   // Overall height of the locking lip (mm)
+lock_gap_height = 1.0;   // Vertical slot height of the locking channel (mm)
+lock_taper      = 1.2;   // Ramp length on the locking tab (mm)
+lock_width      = 8.0;   // Width of the tab engagement surface (mm)
+lock_protrusion = 1.0;   // Total tab lip span (radial); 0.25 embeds in the rim, 0.75 sticks out (mm)
+
+/* [Legacy — removed in phase 2] */
+shaft_radius = 8;  // Old male-insert radius; only lock_channel still references it
 
 // ============================================================
-// HELPER & UTILITY MODULES
+// Entry point
 // ============================================================
 
-// Bends a flat 3D object around a cylinder of a specified radius
-module cylindric_bend(dimensions, radius, nsteps = $fn) {
-    step_angle = (nsteps == 0) ? $fa : atan(dimensions.y / (radius * nsteps));
-    steps      = ceil((nsteps == 0) ? dimensions.y / (tan(step_angle) * radius) : nsteps);
-    step_width = dimensions.y / steps;
-    
+if (view_mode == "assembled") {
+    mount_plate();
+    translate([0, 0, 2])
+        base_plate();
+}
+else if (view_mode == "base_plate") {
+    base_plate();
+}
+else if (view_mode == "mount_plate") {
+    mount_plate();
+}
+else if (view_mode == "lock_tab_linear") {
+    lock_tab_linear();
+}
+else if (view_mode == "lock_channel_linear") {
+    lock_channel_linear();
+}
+else if (view_mode == "diff_check") {
+    color("red")
     intersection() {
-        children();
-        cube([dimensions.x, step_width * 0.5, dimensions.z]);
+        mount_plate();
+        base_plate();
     }
-    
-    for (step = [1 : steps]) {
-        translate([
-            0,
-            radius * sin(step * step_angle),
-            radius * (1 - cos(step * step_angle))
-        ])
-        rotate(step_angle * step, [1, 0, 0])
-        translate([0, -step * step_width, 0])
-        intersection() {
-            children();
-            translate([0, (step - 0.5) * step_width, 0])
-                cube([dimensions.x, step_width, dimensions.z]);
+}
+
+// ============================================================
+// Base plate (ceiling side, male insert)
+// ============================================================
+
+module base_plate() {
+    difference() {
+        // Ø100 × 4 annulus, bottom face toward the light side
+        cylinder(h = plate_thickness, r = plate_radius);
+        // Central Ø50 wire through-hole
+        translate([0, 0, -1])
+            cylinder(h = plate_thickness + 2, r = wire_hole_radius);
+        // 2× flush counterbored M3 screws at r=35 / 90° + 270°
+        for (a = screw_angles)
+            rotate([0, 0, a])
+                translate([screw_hole_radius, 0, 0])
+                    screw_hole();
+    }
+    // 3 rim-mounted lock tabs at 0°/120°/240°
+    lock_tab();
+}
+
+// Through-hole (Ø3.4) with a flush counterbore (Ø6.2 × 3) from the bottom face
+module screw_hole() {
+    translate([0, 0, -1])
+        cylinder(h = plate_thickness + 2, r = screw_through_r);
+    cylinder(h = screw_counterbore_d, r = screw_counterbore_r);
+}
+
+module lock_tab() {
+    bend_r = plate_radius + 1.0;
+    threefold_pattern()
+        // The tab's arc starts at the fold axis and extends 5.6° past it;
+        // this extra 180°+ rotation centers each tab on its 0°/120°/240° axis.
+        rotate([0, 0, 180 + (lock_width / 2 + 1) / bend_r * (180 / PI)])
+            translate([-(plate_radius + 1.0), 0, 2])
+                rotate([0, 90, 0])
+                    cylindric_bend([8, 10.5, 8], bend_r, nsteps = bend_steps)
+                        // z=1.25: tab base embeds 0.25mm past the rim so the
+                        // union with the annulus is robust at $fn=72
+                        translate([0, lock_width + 1, 1.25])
+                            rotate([0, -90, 0])
+                                rotate([0, 0, 90])
+                                    rotate([0, 180, 0])
+                                        lock_tab_linear();
+}
+
+module lock_tab_linear() {
+    difference() {
+        hull() {
+            lip_prism();
+            translate([lock_width, 0, 0])
+                lip_prism();
         }
-    }
-}
-
-// 3-Way Radial Symmetry Pattern (120-degree rotation)
-module tri_pattern() {
-    children();
-    rotate([0, 0, 120])  children();
-    rotate([0, 0, -120]) children();
-}
-
-// Clean 3D prism anchor point for lip geometry
-module liprism() {
-    hull() {
-        translate([0, 0, 0.01])
-            cylinder(r = 0.05, h = 0.01, center = true);
-        translate([0, 0, lip_taper])
-            linear_extrude(height = 5)
-                polygon([[0, lip_protrude], [1, 0], [-1, 0]]);
+        translate([-10, -10, lock_height - lock_gap_height])
+            cube([20, 20, 20]);
     }
 }
 
 // ============================================================
-// LINEAR LOCKING LIP GENERATORS
+// Mount plate (light side, female socket)
 // ============================================================
 
-module reclip_linear() {
+module mount_plate() {
+    socket_radius = shaft_radius + tolerance + lock_protrusion;
+    union() {
+        difference() {
+            cylinder(h = 4, r = plate_radius, center = true);
+            cylinder(h = 5, r = socket_radius, center = true);
+        }
+        translate([0, 0, 2])
+            lock_channel();
+        translate([0, 0, -5])
+            cylinder(h = 3, r = plate_radius);
+    }
+}
+
+module lock_channel() {
+    bend_r = shaft_radius + lock_protrusion + tolerance;
+    threefold_pattern() {
+        translate([-bend_r, 0, 0])
+            rotate([0, 90, 0])
+                cylindric_bend([10, 10, 10], bend_r, nsteps = bend_steps)
+                    translate([2, 7, 0])
+                        rotate([0, -90, 0])
+                            rotate([0, 0, -90])
+                                lock_channel_linear();
+    }
+}
+
+module lock_channel_linear() {
     difference() {
         union() {
             hull() {
-                liprism();
-                translate([lip_taper, 0, -lip_gap_height * 0.5])
-                    liprism();
+                lip_prism();
+                translate([lock_taper, 0, -lock_gap_height * 0.5])
+                    lip_prism();
             }
             hull() {
-                translate([lip_taper, 0, -0.5])
-                    liprism();
-                translate([lip_taper * 2, 0, -lip_gap_height * 0.25])
-                    liprism();
+                translate([lock_taper, 0, -0.5])
+                    lip_prism();
+                translate([lock_taper * 2, 0, -lock_gap_height * 0.25])
+                    lip_prism();
             }
             hull() {
-                translate([lip_taper * 2, 0, -0.25])
-                    liprism();
-                translate([lip_taper * 3 + lip_width, 0, -0.25])
-                    liprism();
+                translate([lock_taper * 2, 0, -0.25])
+                    lip_prism();
+                translate([lock_taper * 3 + lock_width, 0, -0.25])
+                    lip_prism();
             }
             hull() {
-                translate([lip_taper * 3 + lip_width, 0, -(lip_total_height + lip_gap_height - lip_taper)])
-                    liprism();
-                translate([lip_taper * 4 + lip_width, 0, -(lip_total_height + lip_gap_height - lip_taper)])
-                    liprism();
+                translate([lock_taper * 3 + lock_width, 0, -(lock_height + lock_gap_height - lock_taper)])
+                    lip_prism();
+                translate([lock_taper * 4 + lock_width, 0, -(lock_height + lock_gap_height - lock_taper)])
+                    lip_prism();
             }
         }
         union() {
@@ -113,124 +187,50 @@ module reclip_linear() {
     }
 }
 
-module pluglip_linear() {
-    difference() {
-        hull() {
-            liprism();
-            translate([lip_width, 0, 0])
-                liprism();
-        }
-        translate([-10, -10, lip_total_height - lip_gap_height])
-            cube([20, 20, 20]);
-    }
-}
-
-// Creates cylindrical arc sections instead of a full cylinder
-module cylinder_arc_sections(h, r, centers, angle_width) {
-    union() {
-        for (center = centers) {
-            intersection() {
-                cylinder(h = h, r = r);
-                linear_extrude(height = h)
-                polygon(concat(
-                    [[0, 0]],
-                    [for (a = [center - angle_width/2 : 1 : center + angle_width/2])
-                        [r * cos(a), r * sin(a)]]
-                ));
-            }
-        }
-    }
-}
-
 // ============================================================
-// MAIN COMPONENT MODULES
+// Shared helpers
 // ============================================================
 
-// --- Receptacle (Female Socket) ---
-module reclip() {
-    bend_r = plug_radius + lip_protrude + tolerance;
-    tri_pattern() {
-        translate([-bend_r, 0, 0])
-            rotate([0, 90, 0])
-                cylindric_bend([10, 10, 10], bend_r, nsteps = bend_steps)
-                    translate([2, 7, 0])
-                        rotate([0, -90, 0])
-                            rotate([0, 0, -90])
-                                reclip_linear();
+module lip_prism() {
+    hull() {
+        translate([0, 0, 0.01])
+            cylinder(r = 0.05, h = 0.01, center = true);
+        translate([0, 0, lock_taper])
+            linear_extrude(height = 5)
+                polygon([[0, lock_protrusion], [1, 0], [-1, 0]]);
     }
 }
 
-module receptacle() {
-    outer_socket_r = plug_radius + tolerance + lip_protrude;
-    union() {
-        difference() {
-            cylinder(h = 4, r = flange_radius, center = true);
-            cylinder(h = 5, r = outer_socket_r, center = true);
-        }
-        translate([0, 0, 2])
-            reclip();
-        translate([0, 0, -5])
-            cylinder(h = 3, r = flange_radius);
-    }
+// Reproduces children three times at 120-degree intervals
+module threefold_pattern() {
+    children();
+    rotate([0, 0, 120])  children();
+    rotate([0, 0, -120]) children();
 }
 
-// --- Plug (Male Insert) ---
-module plug() {
-    bend_r = plug_radius + 1.0;
-    translate([0, 0, mating_dist + 0.5]) {
-        cylinder(h = 2, r = flange_radius);
-        
-        difference() {
-            union() {
-                translate([0, 0, -3])
-                    cylinder_arc_sections(h = 3, r = plug_radius, centers = [60, 180, 300], angle_width = 60);
-                
-                translate([0, 0, -2]) {
-                    tri_pattern()
-                        translate([-(plug_radius + lip_protrude), 0, 1])
-                            rotate([0, 90, 0])
-                                cylindric_bend([6, 6, 6], bend_r, nsteps = ceil(bend_steps / 2))
-                                    translate([0, lip_width + 1, 1])
-                                        rotate([0, -90, 0])
-                                            rotate([0, 0, 90])
-                                                rotate([0, 180, 0])
-                                                    pluglip_linear();
-                }
-            }
-            
-            // Internal core relief cutout
-            translate([0, 0, -3.1])
-                cylinder(h = 2.1, r = plug_radius - 0.8);
-        }
-    }
-}
+// Bends a flat child object around a cylinder of the given radius
+module cylindric_bend(size, radius, nsteps = $fn) {
+    step_angle = (nsteps == 0) ? $fa : atan(size.y / (radius * nsteps));
+    steps      = ceil((nsteps == 0) ? size.y / (tan(step_angle) * radius) : nsteps);
+    step_width = size.y / steps;
 
-// ============================================================
-// EXECUTION & VIEW CONTROLLER
-// ============================================================
-
-if (view_mode == "assembled") {
-    receptacle();
-    translate([0, 0, 2])
-        plug();
-} 
-else if (view_mode == "receptacle") {
-    receptacle();
-} 
-else if (view_mode == "pluglip_linear") {
-    pluglip_linear();
-}
-else if (view_mode == "reclip_linear") {
-    reclip_linear();
-} 
-else if (view_mode == "plug") {
-    plug();
-} 
-else if (view_mode == "diff_check") {
-    // Shows true geometric overlap between the plug and receptacle
-    color("red")
     intersection() {
-        receptacle();
-        plug();
+        children();
+        cube([size.x, step_width * 0.5, size.z]);
+    }
+
+    for (step = [1 : steps]) {
+        translate([
+            0,
+            radius * sin(step * step_angle),
+            radius * (1 - cos(step * step_angle))
+        ])
+        rotate(step_angle * step, [1, 0, 0])
+        translate([0, -step * step_width, 0])
+        intersection() {
+            children();
+            translate([0, (step - 0.5) * step_width, 0])
+                cube([size.x, step_width, size.z]);
+        }
     }
 }

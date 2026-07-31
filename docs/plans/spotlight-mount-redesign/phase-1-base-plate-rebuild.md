@@ -36,30 +36,29 @@ Does NOT touch:
 - AGENTS.md (phase 3).
 
 ## Todos
-- [ ] Replace the parameter block: `plate_radius = 50`, `plate_thickness = 4`,
+- [x] Replace the parameter block: `plate_radius = 50`, `plate_thickness = 4`,
       `wire_hole_radius = 25`, `screw_hole_radius = 35`, `screw_angles =
       [90, 270]`, counterbore dims (through Ø3.4, counterbore Ø6.2 × 3),
-      `lock_width = 8`, `bend_steps = 24`, `lock_protrusion` keep 0.75 (or
-      bump to 1.0 if tab visibility on the rim is too small), keep
-      `tolerance 0.2`, `lock_height 3.0`, `lock_gap_height 1.0`,
-      `lock_taper 1.2`. Remove `shaft_radius` (or keep only if a helper
+      `lock_width = 8`, `bend_steps = 24`, `lock_protrusion` = 1.0
+      (0.75 proud + 0.25 embed; see NOTES), keep `tolerance 0.2`,
+      `lock_height 3.0`, `lock_gap_height 1.0`, `lock_taper 1.2`. Remove `shaft_radius` (or keep only if a helper
       needs it — prefer removing).
-- [ ] Re-derive the rim bend: compute `lock_tab()` with `bend_r =
+- [x] Re-derive the rim bend: compute `lock_tab()` with `bend_r =
       plate_radius + 1.0`, place tab angularly at 0°/120°/240° (3-fold),
       tabs centered on the rim edge, protruding radially ~`lock_protrusion`.
       Verify via STL export + `openscad_analyze_model` (or footprint
       inspection in a linear view) that the tab hugs the rim at r≈51 and is
       oriented radially. Iterate the translate/rotate offsets in
       `lock_tab()` until correct.
-- [ ] Rewrite `base_plate()`: `difference()` of Ø100×4 disc minus central
+- [x] Rewrite `base_plate()`: `difference()` of Ø100×4 disc minus central
       Ø50 hole and 2 flush counterbores (Ø3.4 through, Ø6.2 × 3 deep) at
       r=35 / 90° and 270°; add the rim tabs. Remove the old solid-hub
       cylinder (`translate([0,0,-3]) cylinder(h=3, r=shaft_radius)`).
-- [ ] Verify `view_mode == "base_plate"` renders via
+- [x] Verify `view_mode == "base_plate"` renders via
       `xvfb-run -a openscad` and analyze the STL: outer Ø≈100, inner Ø≈50,
       counterbores present at r≈35 / 90°+270° (Ø≈6.2, ~3 deep), three rim
       tabs, part is a single connected component, no warnings.
-- [ ] Confirm `lock_tab_linear` still renders for debugging.
+- [x] Confirm `lock_tab_linear` still renders for debugging.
 
 ## Acceptance criteria
 - `base_plate` view renders cleanly (no warnings/errors) and
