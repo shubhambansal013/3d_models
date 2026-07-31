@@ -155,5 +155,43 @@ Suggested entry format:
   `mount_plate`/`lock_channel` fully replaced. Render of the cap: Ø106,
   bbox z[−5,16.5]; assembled bbox z[−15.5,6].
 
+---
+
+## Phase 3 (assembly, renders, docs) — done
+- **Assembled view verified** (no code change needed — phase-2 layout was
+  correct): cap skirt top and base top face both at z=6 (ceiling plane), cap
+  ±53 fully encloses base (max r 50.75), 10mm gap base-bottom→cap-disc so
+  screw heads clear. Wire path clear: ceiling → Ø50 base hole (z0..4) → cap
+  cavity (hollow r≤51) → Ø8 exit at r=12 → spotlight; both holes centered on
+  the twist axis.
+- **`diff_check` at seat is empty by design** (verified: render is a single
+  background color; phase-2 STL sweep gave ~0 volume at seat, only ~0.8mm³
+  transient at rel_rot +15). A drop-pose intersection is also empty (tab
+  rides in the groove void). Blank `diff_check.png` is the honest artifact;
+  no-interference is proven by the phase-2 sweep, not by the image.
+- **Renders** (`xvfb-run -a openscad base.scad -D 'view_mode="…"' -o out.png
+  --viewall --imgsize=1000,800`). Phase-2 session had already produced the
+  assembled/mount iso+top+bottom set in /tmp/opencode (mtime > base.scad);
+  re-render at the same recipe is **byte-identical**, so those were copied in
+  as `assembled_{iso,top,bottom}.png` + `mount_plate_{iso,top,bottom}.png`.
+  `diff_check.png` rendered fresh. Existing phase-1 `base_plate_{top,bottom,
+  iso,side}.png` still current (base_plate module unchanged since phase 1).
+- **Final STL dims** (openscad_analyze_model):
+  - base_plate bbox x[−50,50.75] y[−50,50] z[0,4] → Ø100×4 annulus, tab tip
+    reaches r=50.75 on +X.
+  - mount_plate bbox ±53 z[−5,16.5] → Ø106 cap, boss 5 below disc.
+  - assembled bbox ±53 z[−15.5,6] — matches phase-2 record exactly.
+  - STL triangle counts match phase-2 exports byte-set (3300/2284/5584);
+    post-cleanup STLs compared geometrically identical (ASCII-triangle set
+    diff) before/after param removal.
+- **Cleanup:** removed dead params `tolerance` + `assembly_gap` (unused since
+  phase 2; `ch_clear` replaced tolerance, `mount_offset_z` replaced
+  assembly_gap) and the empty "[Fit & Tolerances]" block; rewrote the file
+  header comment. All six view modes re-rendered with 0 warnings/errors after
+  cleanup; geometry byte-identical.
+- **AGENTS.md rewritten** for the new architecture (params, design notes,
+  rim lock, xvfb-run render recipe, known artifact).
+
+
 
 ---

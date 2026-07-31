@@ -1,6 +1,8 @@
-// Spotlight twist-lock mount.
-// The base plate (ceiling side) carries a male insert that locks into the
-// mount plate (light side). The spotlight screws onto the mount plate.
+// Spotlight twist-lock ceiling mount.
+// Base plate (ceiling side): Ø100 annulus screwed flat to the ceiling, with
+// 3 lock tabs on its outer rim. Mount plate (light side): Ø106 cap that
+// twists ~10° over the base rim, fully hiding the base, with a central boss
+// the spotlight screws onto.
 
 /* [Global & Render Settings] */
 view_mode = "assembled"; // [assembled, base_plate, mount_plate, lock_tab_linear, lock_channel_linear, diff_check]
@@ -18,10 +20,6 @@ screw_angles        = [90, 270];  // Angular positions of the screw holes (deg)
 screw_through_r     = 1.7;        // Through-hole radius for M3 (Ø3.4, mm)
 screw_counterbore_r = 3.1;        // Counterbore radius for socket-head M3 (Ø6.2, mm)
 screw_counterbore_d = 3.0;        // Counterbore depth (mm)
-
-/* [Fit & Tolerances] */
-tolerance    = 0.2;  // Clearance added to the female side for smooth mating (mm)
-assembly_gap = 5.0;  // Vertical spacing between the plates when assembled (mm)
 
 /* [Lock Geometry] */
 lock_height     = 3.0;   // Overall height of the locking lip (mm)

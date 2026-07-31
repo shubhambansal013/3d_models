@@ -75,7 +75,7 @@ shaft-based lock entirely; all lock geometry moves to the outer rim.
 |---|---|---|---|
 | 1 | Base plate rebuild (Ø100 annulus + rim tabs + rim bend) | done | Rim bend re-derived (bend_r=51); tab tip r=50.75 at 0°/120°/240°. See NOTES for constants + 2 deviations |
 | 2 | Mount plate cap rebuild (Ø106 cap + channels + boss) | done | Cap + rim channels + boss; engagement verified by STL intersection sweep vs real base (see NOTES) |
-| 3 | Assembly, renders, docs | pending | Depends on phases 1-2 |
+| 3 | Assembly, renders, docs | done | Assemble verified (cap hides base, wire path clear); renders + STL dims recorded; dead params (tolerance, assembly_gap) removed; AGENTS.md rewritten. diff_check at seat is empty by design |
 
 Status values: `pending`, `in-progress`, `done`.
 This table is the first thing an execution session reads — keep it accurate

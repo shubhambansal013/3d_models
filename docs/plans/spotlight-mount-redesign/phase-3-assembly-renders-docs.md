@@ -34,22 +34,22 @@ Does NOT touch:
 - Physical printing concerns.
 
 ## Todos
-- [ ] Fix `assembled` view: stack base + cap so the cap rim reaches the
+- [x] Fix `assembled` view: stack base + cap so the cap rim reaches the
       ceiling plane and the base is invisible from outside; set up
       `assembly_gap` accordingly. Verify no intersections (base∩cap in the
       seated position should only be the tab/channel contact faces).
-- [ ] Verify wire path end-to-end: ceiling → Ø50 base hole → cap cavity →
+- [x] Verify wire path end-to-end: ceiling → Ø50 base hole → cap cavity →
       Ø8 exit → spotlight. Both holes are centered on the same axis; confirm
       the cavity is unobstructed and the base's screw heads don't foul the
       cap disc when seated.
-- [ ] Render final PNGs (`xvfb-run -a openscad`): base plate top/bottom,
+- [x] Render final PNGs (`xvfb-run -a openscad`): base plate top/bottom,
       cap (underside showing boss + Ø8 hole), assembled, diff_check. Save
       alongside the existing PNGs in `spotlight_base/`.
-- [ ] Export both parts to STL and run `openscad_analyze_model`; record
+- [x] Export both parts to STL and run `openscad_analyze_model`; record
       final dims in NOTES.md.
-- [ ] Update AGENTS.md for the new architecture (params, naming, view modes,
+- [x] Update AGENTS.md for the new architecture (params, naming, view modes,
       design notes).
-- [ ] Remove dead code/params from `base.scad`; re-run validation that all
+- [x] Remove dead code/params from `base.scad`; re-run validation that all
       view modes still render after cleanup.
 
 ## Acceptance criteria
