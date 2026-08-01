@@ -42,7 +42,7 @@ or hardware change.
 |---|---|---|---|
 | 1 | Base plate ring pocket | done | base 23.359→17.523 cm³ (−25%), verified |
 | 2 | Mount plate lip fillet | done | mount 30.56→29.66 cm³ (subtractive quarter-round, −0.9 cm³) |
-| 3 | Mount plate disc pocket + full verification | pending | final renders + STL volume comparison |
+| 3 | Mount plate disc pocket + full verification | done | final renders + STL volume comparison |
 
 ## Phase files
 - `phase-1-base-plate-pocket.md`
