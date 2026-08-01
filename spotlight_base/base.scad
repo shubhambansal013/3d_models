@@ -36,6 +36,7 @@ lock_protrusion = 1.0;   // Total tab lip span (radial); 0.25 embeds in the rim,
 cap_radius    = 53.0;  // Ø106 / 2: cap disc and skirt outer radius (mm)
 cap_disc_h    = 2.5;   // Disc thickness (light-side mounting face) (mm)
 cap_skirt_h   = 14.0;  // Skirt depth: ceiling edge down to the disc (mm)
+cap_fillet_r  = 2.0;   // Fillet radius on the disc/wall junction (bottom lip, mm)
 
 ch_ang_rot    = -10;   // Channel fold-copy axis, 10° behind the tab at drop (deg)
 ch_clear      = 0.2;   // Radial clearance to the tab outer face (mm)
@@ -187,6 +188,9 @@ module mount_plate() {
                 cylinder(h = boss_h + cap_disc_h + 2, r = pilot_r);
             translate([wire_off, 0, -1])
                 cylinder(h = cap_disc_h + 2, r = wire_r);
+            // Rounded bottom lip: carve the quarter-round so the visible edge
+            // reads as a smooth fillet while the Ø106 envelope holds.
+            cap_lip_fillet();
         }
         // Rim lock channels engaging the base-plate tabs (restore the channel region)
         lock_channel();
@@ -197,6 +201,23 @@ module lock_channel() {
     threefold_pattern()
         rotate([0, 0, ch_ang_rot])
             rim_channel();
+}
+
+// Rounded bottom lip. Carves a quarter-disc of radius cap_fillet_r off the
+// disc/wall corner. The quarter-disc's 90° corner sits just outside the part
+// (r = cap_radius + eps, z = -eps) so its two flat faces over-cut the disc
+// face and the outer wall instead of coinciding with them; the visible edge
+// is the smooth arc. Subtractive: the Ø106 envelope and skirt top are kept.
+module cap_lip_fillet() {
+    eps = 0.1;                      // Over-cut past the two faces (mm)
+    r   = cap_radius + eps;
+    n   = ceil($fn / 4);
+    rotate_extrude($fn = $fn)
+        polygon(concat(
+            [[r, -eps]],
+            [for (i = [0 : n]) let(a = 180 - 90 * i / n)
+                 [r + cap_fillet_r * cos(a), -eps + cap_fillet_r * sin(a)]]
+        ));
 }
 
 module rim_channel() {

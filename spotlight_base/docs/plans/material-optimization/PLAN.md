@@ -33,15 +33,15 @@ or hardware change.
   Rationale: User picked this. Skirt top stays flat so it still fully hides the base and seats against the ceiling.
 - Decision: Pocket the mount disc's cup-side face (r6–48, 1mm deep).
   Rationale: User picked this. The face is invisible in use; leaves 1.5mm floor on the visible light side; clears boss (r4.75) and pilot.
-- Decision: Fillet modeled as a `rotate_extrude` half-torus centered at r = `cap_radius − cap_fillet_r`, unioned after the main `difference()`. The existing cup subtraction auto-clips its inner-upper quadrant, so the outer envelope stays r = 53.
-  Rationale: Additive, no rework of the primitive-based geometry, no collision risk.
+- Decision: Fillet implemented as a subtractive `rotate_extrude` quarter-disc (`cap_lip_fillet()`), carved from the disc/wall corner; the quarter-disc's corner sits just outside the part (r = cap_radius + 0.1, z = −0.1) so the flat faces over-cut the two faces and the smooth 2mm arc is the visible lip.
+  Rationale: The originally planned additive half-torus centered at r = cap_radius − cap_fillet_r turned out to be a geometric no-op (the disc+skirt already fill that volume), and the exact-torus subtraction never reached the corner. Subtractive keeps the Ø106 envelope and skirt top; see NOTES.md phase 2.
 
 ## Phase status
 
 | Phase | Title | Status | Notes |
 |---|---|---|---|
 | 1 | Base plate ring pocket | done | base 23.359→17.523 cm³ (−25%), verified |
-| 2 | Mount plate lip fillet | pending | |
+| 2 | Mount plate lip fillet | done | mount 30.56→29.66 cm³ (subtractive quarter-round, −0.9 cm³) |
 | 3 | Mount plate disc pocket + full verification | pending | final renders + STL volume comparison |
 
 ## Phase files

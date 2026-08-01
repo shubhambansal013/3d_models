@@ -20,32 +20,36 @@ the phase-3 disc pocket.
   the lock channels, or any base-plate code.
 
 ## Todos
-- [ ] In the `Cap & Lock Channel` block add:
+- [x] In the `Cap & Lock Channel` block add:
       ```
       cap_fillet_r = 2.0;   // Fillet radius on the disc/wall junction (bottom lip, mm)
       ```
-- [ ] In `mount_plate()`, in the final `union()` alongside `lock_channel()`
-      (base.scad:170–171), add:
-      ```
-      // Rounded bottom lip: half-torus at the disc/wall junction, stays within Ø106.
-      // The cup subtraction auto-clips its inner-upper quadrant.
-      translate([0, 0, cap_fillet_r])
-          rotate_extrude($fn = $fn)
-              translate([cap_radius - cap_fillet_r, 0])
-                  circle(r = cap_fillet_r);
-      ```
-- [ ] Confirm the torus max r = `cap_radius − cap_fillet_r + cap_fillet_r` =
-      `cap_radius` (53) — envelope unchanged, no collision with base rim/tabs.
-- [ ] Confirm the torus (z 0..4) does not overlap the lock channels
-      (z 12.3..14.4) — it does not.
-- [ ] Render: `xvfb-run -a openscad base.scad -D 'view_mode="mount_plate"' -o out.png --viewall --imgsize=1024,1024`
-      and check the bottom lip reads as a smooth rounded edge.
-- [ ] Render `view_mode="assembled"` to confirm the cap still fully hides the
-      base and the fillet doesn't interfere.
-- [ ] Record mount volume before (≈ 31.9 cm³) and after fillet in NOTES.md
-      (expected +1.5–2 cm³ from the outer torus bulge).
+- [x] In `mount_plate()`, inside the `difference()` after the wire-exit hole, add
+      the subtractive quarter-round `cap_lip_fillet()` (module defined next to
+      `lock_channel()`).
+- [x] Deviaton from plan: the planned *additive* half-torus (`rotate_extrude`
+      circle centered at `cap_radius - cap_fillet_r`, unioned alongside
+      `lock_channel()`) is a geometric no-op — the existing disc + skirt already
+      fill that volume, so it adds nothing visible (union left the part
+      identical, `Simple: yes, Volumes: 2`). The exact-torus *subtraction*
+      carves a hidden internal pocket instead (it never reaches the corner,
+      which lies 2.83 mm from the torus center). Implemented instead a
+      quarter-disc subtraction whose 90° corner sits just outside the part
+      (`r = cap_radius + 0.1, z = -0.1`), so its two flat faces over-cut the
+      disc face and outer wall (no coincident faces) and the smooth 2 mm arc is
+      the visible lip. `Simple: yes`, envelope unchanged.
+- [x] Confirm the fillet tool (z −0.1..1.9, r ≥ 51.1) does not overlap the lock
+      channels (z 12.3..14.4) — it does not.
+- [x] Render `view_mode="mount_plate"` and `view_mode="assembled"` — both
+      compile clean, no warnings. (Lip profile verified numerically with
+      trimesh `contains`: disc face solid to r≈51, arc void at (52, 0.1),
+      wall solid again at z≈1.9.)
+- [x] Record mount volume before/after in NOTES.md.
+      Pre: 30.56 cm³, post: 29.66 cm³ → −0.90 cm³. Subtractive fillet removes
+      material (phase expectation of +1.5–2 cm³ was based on the no-op additive
+      torus and is void).
 
 ## Acceptance criteria
-- `mount_plate` render shows a rounded bottom lip, flat skirt top, no clipping artifacts.
-- `assembled` render shows no new interference.
-- Measured volume increases only by the fillet bulge (~1.5–2 cm³), which phase 3's disc pocket more than cancels out.
+- [x] `mount_plate` render shows a rounded bottom lip, flat skirt top, no clipping artifacts.
+- [x] `assembled` render shows no new interference (`diff_check` intersection empty before and after).
+- [x] Measured volume changes only by the fillet (−0.90 cm³ from the carved lip); phase 3's disc pocket adds its own savings on top.

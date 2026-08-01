@@ -41,3 +41,24 @@ Suggested entry format:
   r3.1 + through-hole still hollow); wire hole r20 hollow.
 - `base_plate` and `assembled` renders clean, no warnings. CGAL still reports
   "Volumes: 2" (known tab-slice artifact), "Simple: yes".
+
+## phase 2 (mount plate lip fillet)
+- Plan's additive half-torus was a geometric no-op: the disc (r≤53, z0..2.5)
+  and skirt already fill the torus volume centered at (r=51, z=2), so unioning
+  it changed nothing (verified: `union()` left the part byte-identical in
+  volume, "Simple: yes, Volumes: 2"). The phase's "+1.5–2 cm³" expectation was
+  therefore impossible.
+- Exact-torus *subtraction* was also wrong: the corner (53,0) is 2.83 mm from
+  the torus center, so the cut never reached it — carved a hidden internal
+  pocket instead ("Simple: no, Volumes: 4").
+- Implemented subtractive quarter-round instead: `cap_lip_fillet()` — a
+  `rotate_extrude`'d quarter-disc of radius `cap_fillet_r` whose 90° corner sits
+  at (r = cap_radius + 0.1, z = −0.1). The flat faces over-cut z=0 and r=53
+  (no coincident faces → "Simple: yes"); the smooth 2mm arc is the visible
+  rounded lip. Envelope stays r≤53, skirt top flat, channels/boss/pilot/wire
+  untouched (trimesh `contains` checks all pass).
+- Volumes: mount 30.56 → 29.66 cm³ (−0.90 cm³ from the carved lip). Fillet is
+  subtractive, so it REDUCES mount material (not the planned increase).
+- `diff_check` intersection is empty both before and after (mount seats clear of
+  base material at rest — tab sits in channel void). No interference concern.
+- `mount_plate` and `assembled` renders compile clean, no warnings.
