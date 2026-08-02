@@ -1,11 +1,10 @@
 """
-CadQuery translation of spotlight_base/base.scad
-Spotlight twist-lock ceiling mount.
+CadQuery spotlight twist-lock ceiling mount.
 
-Base plate (ceiling side): O100 annulus screwed flat to the ceiling, with
-3 lock tabs on its outer rim. Mount plate (light side): O106 cap that
-twists ~10deg over the base rim, fully hiding the base, with a central boss
-the spotlight screws onto.
+Base plate (ceiling side): O150 annulus screwed flat to the real O150
+ceiling base (2x M4, holes 78mm apart), with 3 lock tabs on its outer rim.
+Mount plate (light side): O156 cap that twists ~10deg over the base rim,
+fully hiding the base, with a central boss the spotlight screws onto.
 """
 import math
 import random
@@ -22,22 +21,22 @@ FN = 72  # curved-surface resolution (used to size arc sampling below)
 # ============================================================
 # Plate Dimensions
 # ============================================================
-plate_radius = 50.0       # Outer radius of the base plate annulus (mm)
+plate_radius = 75.0       # Outer radius of the base plate annulus (mm); covers the real O150 ceiling base
 plate_thickness = 4.0     # Thickness of the base plate (mm)
 wire_hole_radius = 25.0   # Radius of the central wire through-hole (mm)
 base_pocket_depth = 2.0   # Underside lightening pocket depth (mm)
 base_pocket_inner = 28.0  # Pocket inner radius (mm)
-base_pocket_outer = 42.0  # Pocket outer radius (mm)
+base_pocket_outer = 66.0  # Pocket outer radius (mm); leaves a solid ring to the tab rim
 base_pocket_boss_r = 5.0  # Full-depth circle kept around each screw (mm)
 bend_steps = 24           # Segment count for the cylindrical bend
 
 # ============================================================
-# Screw Holes
+# Screw Holes (M4 socket head, heads sit ~1mm proud, hidden in the cap cavity)
 # ============================================================
-screw_hole_radius = 35.0     # Radius of the M3 screw hole centers (mm)
+screw_hole_radius = 39.0     # Radius of the M4 screw hole centers (mm); 2*39 = 78mm real hole spacing
 screw_angles = [90, 270]     # Angular positions of the screw holes (deg)
-screw_through_r = 1.7        # Through-hole radius for M3 (mm)
-screw_counterbore_r = 3.1    # Counterbore radius for socket-head M3 (mm)
+screw_through_r = 2.1        # Through-hole radius for M4 (O4.2, mm)
+screw_counterbore_r = 3.8    # Counterbore radius for socket-head M4 (O7.6, mm)
 screw_counterbore_d = 3.0    # Counterbore depth (mm)
 
 # ============================================================
@@ -50,9 +49,9 @@ lock_width = 8.0         # Width of the tab engagement surface (mm)
 lock_protrusion = 1.5    # Total tab lip span (radial) (mm)
 
 # ============================================================
-# Cap & Lock Channel (phase 2)
+# Cap & Lock Channel
 # ============================================================
-cap_radius = 53.0     # O106/2: cap disc and skirt outer radius (mm)
+cap_radius = 78.0     # O156/2: cap disc and skirt outer radius (mm); 3mm overhang hides the base edge
 cap_disc_h = 2.5      # Disc thickness (light-side mounting face) (mm)
 cap_skirt_h = 14.0    # Skirt depth (mm)
 cap_fillet_r = 2.0    # Fillet radius on disc/wall junction (mm)
@@ -61,10 +60,21 @@ ch_clear = 0.2        # Radial clearance to the tab outer face (mm)
 ch_back_wall = -5.2   # Groove back wall (fold-local deg)
 ch_front = 15.2       # Groove open entrance (fold-local deg)
 ch_roof_end = 4.8     # Roof front edge (fold-local deg)
-ch_roof_in = 50.4     # Roof overhang inner radius (mm)
+roof_capture = 0.6    # Roof overhang depth past the tab tip (mm); sized for print tolerance
 ch_groove_bot = 12.3  # Groove floor (mount-local z)
-ch_groove_top = 13.8  # Groove ceiling (mount-local z)
-ch_block_top = 14.4   # Channel block top (mount-local z)
+ch_groove_top = 14.0  # Groove ceiling (mount-local z); gives ~0.3mm crest clearance
+ch_block_top = 15.0   # Channel block top (mount-local z); roof thickness 1.0 >= 0.8 min wall
+disc_pocket_depth = 1.0   # Cup-side lightening pocket depth in the mount disc (mm)
+disc_pocket_inner = 8.0   # Pocket inner radius: clears the central pilot/hub (mm)
+disc_pocket_outer = 68.0  # Pocket outer radius: leaves a solid ring to the skirt (mm)
+
+# Derived lock geometry (keep the channel glued to the actual tab at any scale):
+# tab bend radius / root / tip (see lock_tab()); roof hangs `roof_capture` past the tip.
+tab_bend_r = plate_radius + 1.0
+tab_root_r = tab_bend_r - 1.25
+tab_tip_r = tab_root_r + lock_protrusion
+ch_roof_in = tab_tip_r - roof_capture   # Roof overhang inner radius (mm)
+ch_wall_in = tab_tip_r + ch_clear       # Channel outer-wall inner radius (mm)
 
 # Skirt top (cap_disc_h + cap_skirt_h above the mount origin) meets the base
 # ceiling face (assembled base top = 2 + plate_thickness).
@@ -432,8 +442,8 @@ def annular_segment(r1, r2, z1, z2, a1, a2):
 
 def rim_channel():
     """One groove: outer wall ring + roof overhang (back 10deg) + back-wall slab."""
-    r_groove_in = plate_radius + ch_clear      # 50.2
-    r_wall = 50.75 + ch_clear                  # 50.95
+    r_groove_in = plate_radius + ch_clear      # 75.2
+    r_wall = ch_wall_in                        # 76.45
     r_outer = cap_radius
 
     a = annular_segment(r_wall, r_outer, ch_groove_bot, ch_block_top, ch_back_wall, ch_front)
@@ -459,11 +469,16 @@ def mount_plate():
     solid = solid.fuse(cyl(cap_radius, cap_skirt_h, z0=cap_disc_h))
     # solid = solid.fuse(cyl(boss_r, boss_h + cap_disc_h, z0=-boss_h))
 
-    hollow = cyl(plate_radius + 1.0, cap_skirt_h + 0.2, z0=cap_disc_h - 0.1)
+    hollow = cyl(ch_wall_in, cap_skirt_h + 0.2, z0=cap_disc_h - 0.1)
     pilot = cyl(pilot_r, boss_h + cap_disc_h + 2, z0=-boss_h - 1)
     wire_hole = cyl(wire_r, cap_disc_h + 2, z0=-1).translate((wire_off, 0, 0))
 
-    solid = solid.cut(hollow).cut(pilot).cut(wire_hole).cut(cap_lip_fillet())
+    # Cup-side (invisible) lightening pocket: leaves a 1.5mm floor on the
+    # light-side mounting face and a solid ring out to the skirt.
+    disc_pocket = cyl(disc_pocket_outer, disc_pocket_depth + 1, z0=cap_disc_h - disc_pocket_depth) \
+        .cut(cyl(disc_pocket_inner, disc_pocket_depth + 2, z0=cap_disc_h - disc_pocket_depth))
+
+    solid = solid.cut(hollow).cut(pilot).cut(wire_hole).cut(disc_pocket).cut(cap_lip_fillet())
     solid = solid.fuse(lock_channel())
     return solid
 
@@ -532,6 +547,6 @@ if __name__ == "__main__":
 
     # Pass each part as a separate argument with a label
     show(mount, base, names=["Mount", "Base Plate"])
-    cq.exporters.export(cq.Workplane(obj=result), "/mnt/user-data/outputs/base.stl")
-    cq.exporters.export(cq.Workplane(obj=result), "/mnt/user-data/outputs/base.step")
+    cq.exporters.export(cq.Workplane(obj = result), "/home/ubuntu/workspace/models/spotlight_base/output/base.stl")
+    cq.exporters.export(cq.Workplane(obj = result), "/home/ubuntu/workspace/models/spotlight_base/output/base.step")
     print("Exported. Volume:", result.Volume())
