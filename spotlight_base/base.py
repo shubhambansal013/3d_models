@@ -3,9 +3,10 @@ CadQuery spotlight twist-lock ceiling mount.
 
 Base plate (ceiling side): O100 annulus screwed flat to the real ceiling
 (2x M4, holes 78mm apart), with 3 monolithic lugs on its outer rim for the
-twist-lock. Mount plate (light side): cap that twists ~10deg over the base rim,
-with a central boss the spotlight screws onto (cap sizes still O156 pending the
-phase-2 rebuild).
+twist-lock. Mount plate (light side): O108 cap that twists ~10deg over the base
+rim, 2mm disc (1mm cup-side pocket) + 13mm skirt; the spotlight screws onto the
+flat disc (no central boss). Channels retuned to the phase-1 lugs
+(roof captures the 1.2mm lip; back-wall stop at rot ~12.5).
 """
 import math
 import cadquery as cq
@@ -51,22 +52,22 @@ root_fillet = 0.8         # Fillet radius where the lug meets the plate rim (mm)
 # ============================================================
 # Cap & Lock Channel
 # ============================================================
-cap_radius = 78.0     # O156/2: cap disc and skirt outer radius (mm); 3mm overhang hides the base edge
-cap_disc_h = 2.5      # Disc thickness (light-side mounting face) (mm)
-cap_skirt_h = 14.0    # Skirt depth (mm)
+cap_radius = 54.0     # O108/2: cap disc and skirt outer radius (mm); 2mm overhang hides the lug edge
+cap_disc_h = 2.0      # Disc thickness (light-side mounting face) (mm)
+cap_skirt_h = 13.0    # Skirt depth (mm)
 cap_fillet_r = 2.0    # Fillet radius on disc/wall junction (mm)
 ch_ang_rot = -10      # Channel fold-copy axis rotation (deg)
-ch_clear = 0.2        # Radial clearance to the tab outer face (mm)
-ch_back_wall = -5.2   # Groove back wall (fold-local deg)
-ch_front = 15.2       # Groove open entrance (fold-local deg)
-ch_roof_end = 4.8     # Roof front edge (fold-local deg)
-roof_capture = 0.6    # Roof overhang depth past the tab tip (mm); sized for print tolerance
-ch_groove_bot = 12.3  # Groove floor (mount-local z)
-ch_groove_top = 14.0  # Groove ceiling (mount-local z); gives ~0.3mm crest clearance
-ch_block_top = 15.0   # Channel block top (mount-local z); roof thickness 1.0 >= 0.8 min wall
+ch_clear = 0.2        # Radial clearance to the lug tip face (mm)
+ch_back_wall = -10.5  # Groove back wall (fold-local deg): mount-local -20.5, lug stop at rot ~12.5
+ch_front = 22.0       # Groove open entrance (fold-local deg): mount-local +12, clears lug entry at drop
+ch_roof_end = 22.0    # Roof front edge (fold-local deg): lip captured from drop through seat
+roof_capture = 0.6    # Roof overhang depth past the lug tip (mm); == lug_tip_r - lug_step_r
+ch_groove_bot = 11.5  # Groove floor (mount-local z); 0.5mm clear below the lip bottom (z 12.0)
+ch_groove_top = 14.0  # Groove ceiling / roof bottom (mount-local z); seat clearance 0.8mm over lip top (13.2)
+ch_block_top = 15.0   # Channel block top / roof top (mount-local z) = ceiling plane; roof thickness 1.0
 disc_pocket_depth = 1.0   # Cup-side lightening pocket depth in the mount disc (mm)
-disc_pocket_inner = 8.0   # Pocket inner radius: clears the central pilot/hub (mm)
-disc_pocket_outer = 68.0  # Pocket outer radius: leaves a solid ring to the skirt (mm)
+disc_pocket_inner = 8.0   # Pocket inner radius: clears the central pilot (mm)
+disc_pocket_outer = 48.0  # Pocket outer radius: leaves a solid ring to the wall (mm)
 
 # Derived lock geometry (keep the channels glued to the actual lug at any scale):
 # lug_tip_r is the lug's outermost radius; the root stays full-height out to
@@ -311,22 +312,19 @@ def lock_channel():
 
 
 def mount_plate():
-    boss_r = 4.75    # O9.5 central boss (light-side, spotlight mount)
-    boss_h = 5.0
-    pilot_r = 2.9   # O2.9 pilot hole through the boss
+    pilot_r = 1.45   # O2.9 pilot hole through the disc (no central boss)
     wire_off = 12.0  # O8 wire-exit hole center radius
-    wire_r = 5.0
+    wire_r = 4.0     # O8 wire exit hole
 
     solid = cyl(cap_radius, cap_disc_h)
     solid = solid.fuse(cyl(cap_radius, cap_skirt_h, z0=cap_disc_h))
-    # solid = solid.fuse(cyl(boss_r, boss_h + cap_disc_h, z0=-boss_h))
 
     hollow = cyl(ch_wall_in, cap_skirt_h + 0.2, z0=cap_disc_h - 0.1)
-    pilot = cyl(pilot_r, boss_h + cap_disc_h + 2, z0=-boss_h - 1)
+    pilot = cyl(pilot_r, cap_disc_h + 2, z0=-1)
     wire_hole = cyl(wire_r, cap_disc_h + 2, z0=-1).translate((wire_off, 0, 0))
 
-    # Cup-side (invisible) lightening pocket: leaves a 1.5mm floor on the
-    # light-side mounting face and a solid ring out to the skirt.
+    # Cup-side (invisible) lightening pocket: leaves a 1.0mm floor on the
+    # light-side mounting face and a solid ring out to the wall.
     disc_pocket = cyl(disc_pocket_outer, disc_pocket_depth + 1, z0=cap_disc_h - disc_pocket_depth) \
         .cut(cyl(disc_pocket_inner, disc_pocket_depth + 2, z0=cap_disc_h - disc_pocket_depth))
 
