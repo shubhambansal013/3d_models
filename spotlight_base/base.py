@@ -551,4 +551,5 @@ if __name__ == "__main__":
     cq.exporters.export(cq.Workplane(obj = base), "/home/ubuntu/workspace/models/spotlight_base/output/base.stl")
     cq.exporters.export(cq.Workplane(obj = mount), "/home/ubuntu/workspace/models/spotlight_base/output/mount.step")
     cq.exporters.export(cq.Workplane(obj = base), "/home/ubuntu/workspace/models/spotlight_base/output/base.step")
-    print("Exported. Volume:", result.Volume())
+    print("Exported. Mount volume:", mount.Volume())
+    print("Exported. Base volume:", base.Volume())
