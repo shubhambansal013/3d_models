@@ -7,8 +7,8 @@ Run after any geometry-affecting change to base.py:
     python -m pytest spotlight_base/tests -q
 
 The contract (enforced by tests/conftest.py):
-  - .cache/base_fused.brep  -> 1 solid,  ~56.7 cm3
-  - .cache/mount_fused.brep -> 4 solids, ~55.0 cm3
+  - .cache/base_fused.brep  -> 1 solid,  ~49.3 cm3
+  - .cache/mount_fused.brep -> 4 solids, ~42.1 cm3
 """
 import os
 import sys

@@ -12,7 +12,7 @@ python -m pytest spotlight_base/tests -q        # ~8 s, must stay < 60 s
 ```
 
 The suite is the only trusted verification. It probes the cached fused solids
-(`spotlight_base/.cache/base_fused.brep` = 1 solid 40.4 cm³, `mount_fused.brep`
+(`spotlight_base/.cache/base_fused.brep` = 1 solid 49.3 cm³, `mount_fused.brep`
 = 4 solids 42.1 cm³) with OCC `BRepClass3d_SolidClassifier` — the only tool
 correct on this model's double-walled tessellation. **Do not use trimesh /
 pymeshfix / manifold3d** (all proven wrong; removed from the venv).
@@ -30,7 +30,7 @@ Frame discipline: assembly frame ONLY — base at z 2..6, mount origin at
 
 - Base: `plate_radius` (75, Ø150), `plate_thickness` (4), `wire_hole_radius`
   (25), `screw_*` (M4 at r=39 → 78 mm chord, counterbored flush). Underside
-  ring pocket `base_pocket_outer` (66) saves ~16 cm³.
+  ring pocket `base_pocket_outer` (66) saves ~13 cm³.
 - Lock: `lock_width` (8), `lock_protrusion` (1.5), `lock_taper`/`lock_height`/
   `lock_gap_height`, `bend_steps` (24). Derived: `tab_tip_r = tab_bend_r −
   1.25 + lock_protrusion` (76.25); `ch_roof_in = tab_tip_r − roof_capture`

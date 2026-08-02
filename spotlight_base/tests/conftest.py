@@ -96,8 +96,8 @@ def base_probe():
     solids = _load_solids(BASE_CACHE)
     assert len(solids) == 1, "base_fused.brep should be one fused solid"
     v = _solid_volume_cm3(solids[0])
-    assert 39.5 < v < 41.5, (
-        f"base cache volume {v:.2f} cm3 out of range (expect ~40.4). "
+    assert 48.0 < v < 50.5, (
+        f"base cache volume {v:.2f} cm3 out of range (expect ~49.3). "
         "The cache is stale or the model changed; regenerate it."
     )
     return Probe(solids)

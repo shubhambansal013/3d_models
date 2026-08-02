@@ -22,7 +22,7 @@ FN = 72  # curved-surface resolution (used to size arc sampling below)
 # Plate Dimensions
 # ============================================================
 plate_radius = 75.0       # Outer radius of the base plate annulus (mm); covers the real O150 ceiling base
-plate_thickness = 2.0     # Thickness of the base plate (mm)
+plate_thickness = 4.0     # Thickness of the base plate (mm)
 wire_hole_radius = 25.0   # Radius of the central wire through-hole (mm)
 base_pocket_depth = 1.2   # Underside lightening pocket depth (mm)
 base_pocket_inner = 28.0  # Pocket inner radius (mm)

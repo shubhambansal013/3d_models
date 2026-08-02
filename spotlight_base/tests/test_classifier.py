@@ -21,8 +21,8 @@ BASE_EXPECTED = [
     (78.0, 0.0, 3.0, False),    # beyond plate and tab tip
     (0.0, 39.0, 3.0, False),    # M4 through-hole (90 deg)
     (0.0, -39.0, 3.0, False),   # M4 through-hole (270 deg)
-    (20.0, 39.0, 3.0, False),   # inside the widened pocket band (r~43.8, z<2)
-    (40.0, 40.0, 2.3, False),   # widened pocket void (r~56.6, z<2)
+    (20.0, 39.0, 3.0, False),   # inside the widened pocket band (r~43.8, z<1.2)
+    (40.0, 40.0, 2.3, False),   # widened pocket void (r~56.6, z<1.2)
     (35.0, 0.0, 2.5, False),    # ring-pocket void
     (35.0, 0.0, 4.5, True),     # above pocket -> solid skin
     (60.0, 0.0, 2.2, False),    # widened pocket void
