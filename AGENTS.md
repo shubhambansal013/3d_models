@@ -24,7 +24,12 @@ design) → `test_seat_fit.py` / `test_rotation.py` / `test_pullout.py` /
 
 Frame discipline: assembly frame ONLY — base at z 2..6, mount origin at
 `mount_offset_z = -10.5`; seat pose is mount rotation +10 (`rot=10`). See
-`docs/plans/verification-handoff.md` + `verification-test-plan.md`.
+`spotlight_base/README.md` (design, key decisions, golden numbers, OCP
+gotchas).
+
+Process: plans live in `spotlight_base/docs/plans/`; delete a plan folder once
+all its phases are done (distill must-keep facts into the README first). Only
+pending plans remain.
 
 ## Key parameters (top of `base.py`)
 

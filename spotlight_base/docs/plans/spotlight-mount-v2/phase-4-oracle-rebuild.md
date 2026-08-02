@@ -38,5 +38,5 @@ Does **not** touch: seat/rotation/pullout/strength tests (phase 5/6), `base.py`.
 ## Acceptance criteria
 - `test_parameters.py` + `test_classifier.py` green.
 - New golden numbers (lip top z, roof bottom z, stop onset, catch onset) measured
-  via the kernel and recorded in NOTES.md / verification-handoff later.
+  via the kernel and recorded in NOTES.md / README later.
 - Frame transforms validated by the oracle and then frozen (tests stop computing offsets).

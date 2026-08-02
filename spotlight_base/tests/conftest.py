@@ -6,7 +6,7 @@ use base_contains / mount_contains only.
 
 Containment is exact OCC B-Rep classification (BRepClass3d_SolidClassifier)
 against the cached fused solids — the only tool proven correct on this
-model's double-walled tessellation (see docs/plans/verification-handoff.md).
+model's double-walled tessellation (see spotlight_base/README.md).
 """
 import math
 import os
