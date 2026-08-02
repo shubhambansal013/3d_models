@@ -1,13 +1,13 @@
 """
 CadQuery spotlight twist-lock ceiling mount.
 
-Base plate (ceiling side): O150 annulus screwed flat to the real O150
-ceiling base (2x M4, holes 78mm apart), with 3 lock tabs on its outer rim.
-Mount plate (light side): O156 cap that twists ~10deg over the base rim,
-fully hiding the base, with a central boss the spotlight screws onto.
+Base plate (ceiling side): O100 annulus screwed flat to the real ceiling
+(2x M4, holes 78mm apart), with 3 monolithic lugs on its outer rim for the
+twist-lock. Mount plate (light side): cap that twists ~10deg over the base rim,
+with a central boss the spotlight screws onto (cap sizes still O156 pending the
+phase-2 rebuild).
 """
 import math
-import random
 import cadquery as cq
 from cadquery import Vector
 from ocp_vscode import show
@@ -15,38 +15,38 @@ from ocp_vscode import show
 # ============================================================
 # Global & Render Settings
 # ============================================================
-VIEW_MODE = "assembled"  # assembled, base_plate, mount_plate, lock_tab_linear, lock_channel_linear, diff_check
+VIEW_MODE = "assembled"  # assembled, base_plate, mount_plate, diff_check
 FN = 72  # curved-surface resolution (used to size arc sampling below)
 
 # ============================================================
 # Plate Dimensions
 # ============================================================
-plate_radius = 75.0       # Outer radius of the base plate annulus (mm); covers the real O150 ceiling base
-plate_thickness = 4.0     # Thickness of the base plate (mm)
-wire_hole_radius = 25.0   # Radius of the central wire through-hole (mm)
-base_pocket_depth = 1.2   # Underside lightening pocket depth (mm)
-base_pocket_inner = 28.0  # Pocket inner radius (mm)
-base_pocket_outer = 66.0  # Pocket outer radius (mm); leaves a solid ring to the tab rim
+plate_radius = 50.0       # Outer radius of the base plate annulus (mm); O100
+plate_thickness = 3.0     # Thickness of the base plate (mm)
+wire_hole_radius = 20.0   # Radius of the central wire through-hole (mm; O40)
+base_pocket_depth = 1.2   # Underside lightening pocket depth (mm); leaves 1.8mm skin
+base_pocket_inner = 30.0  # Pocket inner radius (mm)
+base_pocket_outer = 48.0  # Pocket outer radius (mm); leaves a solid ring to the lug rim
 base_pocket_boss_r = 4.5  # Full-depth circle kept around each screw (mm)
-bend_steps = 24           # Segment count for the cylindrical bend
 
 # ============================================================
-# Screw Holes (M4 socket head, heads sit ~1mm proud, hidden in the cap cavity)
+# Screw Holes (M4 pan head, counterbored flush from the ceiling side)
 # ============================================================
 screw_hole_radius = 39.0     # Radius of the M4 screw hole centers (mm); 2*39 = 78mm real hole spacing
 screw_angles = [90, 270]     # Angular positions of the screw holes (deg)
-screw_through_r = 2.1        # Through-hole radius for M4 (O4.2, mm)
-screw_counterbore_r = 3.8    # Counterbore radius for socket-head M4 (O7.6, mm)
-screw_counterbore_d = 3.0    # Counterbore depth (mm)
+screw_through_r = 2.25       # Through-hole radius for M4 (O4.5, mm)
+screw_counterbore_r = 4.1    # Counterbore radius for M4 pan head (O8.2, mm)
+screw_counterbore_d = 2.0    # Counterbore depth (mm); leaves 1.0mm skin
 
 # ============================================================
-# Lock Geometry
+# Lock Lugs (monolithic twist-lock teeth, revolve-built, no cylindric_bend)
 # ============================================================
-lock_height = 3.0        # Overall height of the locking lip (mm)
-lock_gap_height = 1.0    # Vertical slot height of the locking channel (mm)
-lock_taper = 1.2         # Ramp length on the locking tab (mm)
-lock_width = 8.0         # Width of the tab engagement surface (mm)
-lock_protrusion = 1.5    # Total tab lip span (radial) (mm)
+lock_protrusion = 2.0     # Radial proud of the lug past the plate rim (mm); tip at r 52
+lug_width = 14.0          # Lug arc width measured along the rim (mm)
+lug_angles = [0, 120, 240]  # Angular centers of the three lugs (deg)
+lock_height = plate_thickness  # Full lug height at the root (mm)
+lip_h = 1.2               # Height of the stepped tip lip (mm); lip top native z = 1.2
+root_fillet = 0.8         # Fillet radius where the lug meets the plate rim (mm)
 
 # ============================================================
 # Cap & Lock Channel
@@ -68,13 +68,19 @@ disc_pocket_depth = 1.0   # Cup-side lightening pocket depth in the mount disc (
 disc_pocket_inner = 8.0   # Pocket inner radius: clears the central pilot/hub (mm)
 disc_pocket_outer = 68.0  # Pocket outer radius: leaves a solid ring to the skirt (mm)
 
-# Derived lock geometry (keep the channel glued to the actual tab at any scale):
-# tab bend radius / root / tip (see lock_tab()); roof hangs `roof_capture` past the tip.
-tab_bend_r = plate_radius + 1.0
-tab_root_r = tab_bend_r - 1.25
-tab_tip_r = tab_root_r + lock_protrusion
-ch_roof_in = tab_tip_r - roof_capture   # Roof overhang inner radius (mm)
-ch_wall_in = tab_tip_r + ch_clear       # Channel outer-wall inner radius (mm)
+# Derived lock geometry (keep the channels glued to the actual lug at any scale):
+# lug_tip_r is the lug's outermost radius; the root stays full-height out to
+# lug_step_r so the phase-2 roof (inner radius = lug_tip_r - roof_capture = 51.4)
+# clears the full-height root and only captures the 1.2mm lip.
+lug_tip_r = plate_radius + lock_protrusion   # 52: lug tip radius (mm)
+lug_step_r = lug_tip_r - 0.6                 # 51.4: full-height root radius, lip starts past this
+lug_overlap = 0.5             # Lug root buried this far into the plate rim (mm)
+lug_root_r = plate_radius - lug_overlap      # 49.5: guarantees a true boolean union
+ch_roof_in = lug_tip_r - roof_capture   # Roof overhang inner radius (mm)
+ch_wall_in = lug_tip_r + ch_clear       # Channel outer-wall inner radius (mm)
+
+# Angular half-span of one lug about its center (arc mm -> rad at the rim).
+lug_arc_angle = math.degrees(lug_width / plate_radius)
 
 # Skirt top (cap_disc_h + cap_skirt_h above the mount origin) meets the base
 # ceiling face (assembled base top = 2 + plate_thickness).
@@ -101,126 +107,6 @@ def rotate_deg(shape, angle, axis=(0, 0, 1), about=(0, 0, 0)):
     ax0 = Vector(*about)
     ax1 = Vector(about[0] + axis[0], about[1] + axis[1], about[2] + axis[2])
     return shape.rotate(ax0, ax1, angle)
-
-
-def convex_hull_2d(points):
-    """Pure-Python 2D convex hull (Andrew's monotone chain), no external deps.
-    points: iterable of (x, y). Returns hull vertices in CCW order."""
-    pts = sorted(set(points))
-    if len(pts) <= 2:
-        return pts
-
-    def cross(o, a, b):
-        return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0])
-
-    lower = []
-    for p in pts:
-        while len(lower) >= 2 and cross(lower[-2], lower[-1], p) <= 0:
-            lower.pop()
-        lower.append(p)
-    upper = []
-    for p in reversed(pts):
-        while len(upper) >= 2 and cross(upper[-2], upper[-1], p) <= 0:
-            upper.pop()
-        upper.append(p)
-    return lower[:-1] + upper[:-1]
-
-
-def hull_solid(shapes):
-    """Convex hull of the vertices of one or more solids -> a single solid.
-    General-purpose, dependency-free stand-in for OpenSCAD's hull(), via brute-force
-    O(n^3) facet enumeration. A tiny random jitter breaks exact coplanarity/collinearity
-    so the "all other points on one side" test never has to special-case degenerate
-    ties. Fine for the modest point counts this model produces (debug views only) -
-    the two hull() calls on the hot path (lip_prism / lock_tab_linear) are instead
-    built exactly via ruled lofts (see below) and don't use this at all."""
-    rng = random.Random(0)
-    pts = []
-    for s in shapes:
-        for v in s.Vertices():
-            pts.append((v.X, v.Y, v.Z))
-    # de-duplicate first (cheap), then jitter to break degeneracies
-    pts = list({p for p in pts})
-    eps = 1e-6
-    jittered = [(x + rng.uniform(-eps, eps),
-                 y + rng.uniform(-eps, eps),
-                 z + rng.uniform(-eps, eps)) for x, y, z in pts]
-
-    n = len(jittered)
-
-    def sub(a, b):
-        return (a[0] - b[0], a[1] - b[1], a[2] - b[2])
-
-    def cross3(a, b):
-        return (a[1] * b[2] - a[2] * b[1],
-                 a[2] * b[0] - a[0] * b[2],
-                 a[0] * b[1] - a[1] * b[0])
-
-    def dot(a, b):
-        return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
-
-    faces = []
-    for i in range(n):
-        for j in range(i + 1, n):
-            for k in range(j + 1, n):
-                p0, p1, p2 = jittered[i], jittered[j], jittered[k]
-                normal = cross3(sub(p1, p0), sub(p2, p0))
-                nrm = math.sqrt(dot(normal, normal))
-                if nrm < 1e-12:
-                    continue  # collinear triple, not a face
-                pos = neg = False
-                for m in range(n):
-                    if m in (i, j, k):
-                        continue
-                    d = dot(normal, sub(jittered[m], p0))
-                    if d > 1e-9:
-                        pos = True
-                    elif d < -1e-9:
-                        neg = True
-                    if pos and neg:
-                        break
-                if pos and neg:
-                    continue  # points on both sides -> not a hull face
-                # orient outward: all other points must be on the "neg" side of normal
-                if pos and not neg:
-                    normal = tuple(-c for c in normal)
-                    p1, p2 = p2, p1
-                faces.append((p0, p1, p2))
-
-    cq_faces = []
-    for p0, p1, p2 in faces:
-        wire = cq.Wire.makePolygon([Vector(*p0), Vector(*p1), Vector(*p2)], close=True)
-        cq_faces.append(cq.Face.makeFromWires(wire))
-
-    # Tolerant sewing (rather than strict Shell.makeShell/Solid.makeSolid) copes with
-    # the near-degenerate slivers the tessellated "point" circles can produce.
-    from OCP.BRepBuilderAPI import BRepBuilderAPI_Sewing
-    from OCP.ShapeFix import ShapeFix_Solid
-    from OCP.TopoDS import TopoDS
-
-    sewing = BRepBuilderAPI_Sewing(1e-4)
-    for f in cq_faces:
-        sewing.Add(f.wrapped)
-    sewing.Perform()
-    sewn = sewing.SewedShape()
-    shell = TopoDS.Shell_s(sewn) if sewn.ShapeType().name == "SHELL" else None
-    if shell is None:
-        # fall back: take the first shell found inside whatever sewing produced
-        shell = cq.Shape.cast(sewn).Shells()[0].wrapped
-    solid = ShapeFix_Solid().SolidFromShell(shell)
-    result = cq.Solid(solid)
-    if result.Volume() < 0:
-        result = cq.Solid(solid.Reversed())
-    result = result.clean()
-    if not result.isValid():
-        raise RuntimeError(
-            "hull_solid() produced a non-manifold/invalid shape for this point set "
-            "(this brute-force fallback is only exercised by the lock_channel_linear "
-            "debug view - the main assembled/base_plate/mount_plate/lock_tab_linear "
-            "geometry never calls it). Reduce circle tessellation or inspect the "
-            "input points if you need this specific view."
-        )
-    return result
 
 
 def polygon_extrude(points_xy, height, z0=0.0):
@@ -258,110 +144,73 @@ def threefold_pattern(build_fn, fuse=True):
 # Shared helpers (from OpenSCAD "Shared helpers" section)
 # ============================================================
 
-def _circle_pts(r, n=16, center=(0.0, 0.0)):
-    cx, cy = center
-    return [(cx + r * math.cos(2 * math.pi * i / n), cy + r * math.sin(2 * math.pi * i / n))
-            for i in range(n)]
+def polygon_extrude(points_xy, height, z0=0.0):
+    """linear_extrude(height) of a 2D polygon defined in the XY plane,
+    with the extrusion's base placed at z0."""
+    wire = cq.Wire.makePolygon([Vector(x, y, 0) for x, y in points_xy], close=True)
+    solid = cq.Solid.extrudeLinear(wire, [], Vector(0, 0, height))
+    return solid.translate((0, 0, z0))
 
 
-def _wire_at_z(points_xy, z):
-    return cq.Wire.makePolygon([Vector(x, y, z) for x, y in points_xy], close=True)
+def revolve_profile(points_xz, angle=360, axis_pt0=(0, 0, 0), axis_pt1=(0, 0, 1)):
+    """rotate_extrude() of a profile given as (x, z) points around the Z axis
+    (x = radius, taken as the local XY-plane profile OpenSCAD rotates)."""
+    wire = cq.Wire.makePolygon([Vector(x, 0, z) for x, z in points_xz], close=True)
+    return cq.Solid.revolve(wire, [], angle, Vector(*axis_pt0), Vector(*axis_pt1))
 
 
-def lip_prism():
-    """hull(tiny near-point cylinder @ z~0.01, triangular prism from z=lock_taper..+5).
-    Since the "point" is by far the smallest cross-section and the triangle only grows
-    from there (never shrinks), the hull is exactly: a ruled loft from the tiny circle
-    up to the triangle, fused with the constant-cross-section prism above it - so this
-    is built directly, with no generic hull() needed."""
-    bottom = _wire_at_z(_circle_pts(0.05, n=16), 0.01)
-    tri_pts = [(0, lock_protrusion), (1, 0), (-1, 0)]
-    top = _wire_at_z(tri_pts, lock_taper)
-    cone = cq.Solid.makeLoft([bottom, top], ruled=True)
-    prism = polygon_extrude(tri_pts, 5, z0=lock_taper)
-    return cone.fuse(prism)
+def threefold_pattern(build_fn, fuse=True):
+    """Reproduces build_fn() three times at 120-degree intervals.
+    fuse=True boolean-unions the 3 copies (fine when each copy is a single clean
+    solid, e.g. a monolithic lug)."""
+    a = build_fn()
+    b = rotate_deg(build_fn(), 120)
+    c = rotate_deg(build_fn(), -120)
+    if fuse:
+        return a.fuse(b).fuse(c)
+    solids = list(a.Solids()) + list(b.Solids()) + list(c.Solids())
+    return cq.Compound.makeCompound(solids)
 
 
-def lock_tab_linear():
-    """hull(lip_prism(), lip_prism() shifted +lock_width in X), then cut to height.
-    Both lip_prisms share the same z-profile (tiny circle -> triangle -> constant
-    prism), just offset in X, so the combined hull's cross-section at any z is simply
-    the 2D convex hull of the two individual cross-sections at that same z - built
-    exactly via 2D hulls at the two key z-levels, ruled-lofted between them."""
-    bottom_pts = convex_hull_2d(
-        _circle_pts(0.05, n=16, center=(0, 0)) + _circle_pts(0.05, n=16, center=(lock_width, 0))
-    )
-    tri_a = [(0, lock_protrusion), (1, 0), (-1, 0)]
-    tri_b = [(lock_width, lock_protrusion), (lock_width + 1, 0), (lock_width - 1, 0)]
-    top_pts = convex_hull_2d(tri_a + tri_b)
-
-    bottom = _wire_at_z(bottom_pts, 0.01)
-    top = _wire_at_z(top_pts, lock_taper)
-    cone = cq.Solid.makeLoft([bottom, top], ruled=True)
-    prism = polygon_extrude(top_pts, 5, z0=lock_taper)
-    h = cone.fuse(prism)
-
-    cut_box = box(20, 20, 20, corner=(-10, -10, lock_height - lock_gap_height))
-    return h.cut(cut_box)
+def _lug_root_edges(shape, r, z_top, tol=0.02):
+    """Straight edges at radius `r` running the full plate height z 0..z_top:
+    exactly the two concave junctions where a lug's side face meets the rim."""
+    out = []
+    for e in shape.Edges():
+        vs = e.Vertices()
+        if len(vs) != 2:
+            continue
+        p0, p1 = vs[0], vs[1]
+        r0 = math.hypot(p0.X, p0.Y)
+        r1 = math.hypot(p1.X, p1.Y)
+        zs = sorted([p0.Z, p1.Z])
+        if abs(r0 - r) < tol and abs(r1 - r) < tol and abs(zs[0]) < tol and abs(zs[1] - z_top) < tol:
+            out.append(e)
+    return out
 
 
-def cylindric_bend(child, size_x, size_y, size_z, radius, nsteps):
-    """Bends a flat child object (extending in +Y, within [0,size_x]x[0,size_y]x[0,size_z])
-    around a cylinder of the given radius, in `nsteps` flat facets - direct port of the
-    OpenSCAD cylindric_bend() module.
+def lock_lug():
+    """One monolithic twist-lock lug centred on +X, on the plate rim.
 
-    Returns a Compound of the (nsteps+1) touching slices rather than a boolean-fused
-    solid: each slice only touches its neighbour along a shared cut plane (no true
-    overlap), but OCC's boolean fuse is unreliable when chained across dozens of such
-    coincident/touching faces - in testing it silently discarded all but a sliver of
-    the material. A Compound of touching solids tessellates identically to a fused
-    solid for STL/3D-printing purposes, so nothing is lost by skipping the fuse."""
-    step_angle = math.degrees(math.atan(size_y / (radius * nsteps)))
-    steps = nsteps
-    step_width = size_y / steps
-
-    pieces = []
-
-    # central sliver at the tangent point (untransformed)
-    center_cube = box(size_x, step_width * 0.5, size_z)
-    pieces.append(child.intersect(center_cube))
-
-    for step in range(1, steps + 1):
-        slice_cube = box(size_x, step_width, size_z, corner=(0, (step - 0.5) * step_width, 0))
-        piece = child.intersect(slice_cube)
-        piece = piece.translate((0, -step * step_width, 0))
-        piece = rotate_deg(piece, step_angle * step, axis=(1, 0, 0))
-        piece = piece.translate((
-            0,
-            radius * math.sin(math.radians(step_angle * step)),
-            radius * (1 - math.cos(math.radians(step_angle * step))),
-        ))
-        pieces.append(piece)
-
-    return cq.Compound.makeCompound(pieces)
-
-
-def lock_tab():
-    bend_r = plate_radius + 1.0
-
-    def build():
-        # translate([0, lock_width+1, 1.25]) rotate([0,-90,0]) rotate([0,0,90]) rotate([0,180,0]) lock_tab_linear();
-        child = lock_tab_linear()
-        child = rotate_deg(child, 180, axis=(0, 1, 0))
-        child = rotate_deg(child, 90, axis=(0, 0, 1))
-        child = rotate_deg(child, -90, axis=(0, 1, 0))
-        child = child.translate((0, lock_width + 1, 1.25))
-
-        bent = cylindric_bend(child, 8, 10.5, 8, bend_r, bend_steps)
-
-        # rotate([0,90,0]) translate([-(plate_radius+1.0),0,2]) rotate([0,0,180+offset])
-        result = rotate_deg(bent, 90, axis=(0, 1, 0))
-        result = result.translate((-(plate_radius + 1.0), 0, 2))
-        offset = (lock_width / 2 + 1) / bend_r * (180 / math.pi)
-        result = rotate_deg(result, 180 + offset, axis=(0, 0, 1))
-        return result
-
-    return threefold_pattern(build, fuse=False)
+    Profile (r-z): full `lock_height` rib out to `lug_step_r` (51.4), then a
+    vertical step down to a `lip_h` (1.2) lip over the outer `lock_protrusion`
+    band (r .. lug_tip_r = 52). Built by revolving the r-z profile over the
+    lug's angular span (`lug_width` mm of arc at the rim) - a single clean
+    solid, no cylindric_bend slices. The root is buried `lug_overlap` into the
+    plate rim so the base boolean is a true union (single solid); the 0.8 mm
+    root fillet is applied on the fused junction edges in base_plate()."""
+    half = lug_arc_angle / 2.0
+    profile = [
+        (lug_root_r, 0.0),
+        (lug_step_r, 0.0),
+        (lug_tip_r, 0.0),
+        (lug_tip_r, lip_h),
+        (lug_step_r, lip_h),
+        (lug_step_r, lock_height),
+        (lug_root_r, lock_height),
+    ]
+    lug = revolve_profile(profile, angle=lug_arc_angle)
+    return rotate_deg(lug, -half, axis=(0, 0, 1))
 
 
 # ============================================================
@@ -379,7 +228,7 @@ def _screw_hole_solid():
 def base_pocket():
     """Underside (light side) ring pocket to save filament. Screw bosses keep
     full plate thickness so the counterbores stay flush and the ceiling
-    side remains a flat 2mm skin."""
+    side remains a flat 1.8mm skin."""
     outer = cyl(base_pocket_outer, base_pocket_depth + 1, z0=-1)
     inner = cyl(base_pocket_inner, base_pocket_depth + 2, z0=-1)
     pocket = outer.cut(inner)
@@ -401,10 +250,13 @@ def base_plate():
         sh = rotate_deg(sh, a, axis=(0, 0, 1))
         result = result.cut(sh)
     result = result.cut(base_pocket())
-    # lock_tab() is a Compound of many touching (not overlapping) slices; a boolean
-    # fuse with it is unreliable (see cylindric_bend), so bundle everything into one
-    # Compound instead - identical result for STL/3D-printing purposes.
-    return cq.Compound.makeCompound([result] + list(lock_tab().Solids()))
+    lugs = threefold_pattern(lock_lug, fuse=True)
+    result = result.fuse(lugs)
+    # Root fillets at the 6 concave junctions where the lugs meet the rim.
+    edges = _lug_root_edges(result, plate_radius, lock_height)
+    if len(edges) == 6:
+        result = result.fillet(root_fillet, edges)
+    return result
 
 
 # ============================================================
@@ -484,32 +336,6 @@ def mount_plate():
 
 
 # ============================================================
-# Debug-view helper (view_mode = "lock_channel_linear")
-# ============================================================
-
-def lock_channel_linear():
-    def hull_pair(off_a, z_a, off_b, z_b):
-        a = lip_prism().translate((off_a, 0, z_a))
-        b = lip_prism().translate((off_b, 0, z_b))
-        return hull_solid([a, b])
-
-    parts = [
-        hull_pair(0, 0, lock_taper, -lock_gap_height * 0.5),
-        hull_pair(lock_taper, -0.5, lock_taper * 2, -lock_gap_height * 0.25),
-        hull_pair(lock_taper * 2, -0.25, lock_taper * 3 + lock_width, -0.25),
-        hull_pair(lock_taper * 3 + lock_width, -(lock_height + lock_gap_height - lock_taper),
-                   lock_taper * 4 + lock_width, -(lock_height + lock_gap_height - lock_taper)),
-    ]
-    union = parts[0]
-    for p in parts[1:]:
-        union = union.fuse(p)
-
-    cut1 = box(20, 20, 20, corner=(-10, -10, 2.0))
-    cut2 = box(20, 20, 20, corner=(-10, -10, -21.0))
-    return union.cut(cut1).cut(cut2)
-
-
-# ============================================================
 # Entry point (mirrors the OpenSCAD `if (view_mode == ...)` block)
 # ============================================================
 
@@ -528,10 +354,6 @@ def build(view_mode=VIEW_MODE):
         return base_plate()
     elif view_mode == "mount_plate":
         return mount_plate()
-    elif view_mode == "lock_tab_linear":
-        return lock_tab_linear()
-    elif view_mode == "lock_channel_linear":
-        return lock_channel_linear()
     elif view_mode == "diff_check":
         mount = _mount_seated()
         base = base_plate().translate((0, 0, 2))
