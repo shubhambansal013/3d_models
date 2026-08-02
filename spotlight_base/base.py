@@ -547,6 +547,8 @@ if __name__ == "__main__":
 
     # Pass each part as a separate argument with a label
     show(mount, base, names=["Mount", "Base Plate"])
-    cq.exporters.export(cq.Workplane(obj = result), "/home/ubuntu/workspace/models/spotlight_base/output/base.stl")
-    cq.exporters.export(cq.Workplane(obj = result), "/home/ubuntu/workspace/models/spotlight_base/output/base.step")
+    cq.exporters.export(cq.Workplane(obj = mount), "/home/ubuntu/workspace/models/spotlight_base/output/mount.stl")
+    cq.exporters.export(cq.Workplane(obj = base), "/home/ubuntu/workspace/models/spotlight_base/output/base.stl")
+    cq.exporters.export(cq.Workplane(obj = mount), "/home/ubuntu/workspace/models/spotlight_base/output/mount.step")
+    cq.exporters.export(cq.Workplane(obj = base), "/home/ubuntu/workspace/models/spotlight_base/output/base.step")
     print("Exported. Volume:", result.Volume())
