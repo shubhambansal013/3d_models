@@ -1,13 +1,13 @@
-"""Tier 3, part 2: rotation stop — the tab meets the channel back wall.
+"""Tier 3, part 2: rotation stop — the lug meets the channel back wall.
 
 Rotation `rot` is the mount's absolute rotation in the assembly frame;
 rot=10 is the seated pose. The stop is probed analytically: the mount's
 back-wall slab occupies a known ~0.5 deg-wide angular window at each rot,
-so we sample base (tab) material in exactly that window (3x3x3 points =
-bounded). Tab material there means the back wall is up against the tab.
+so we sample base (lug) material in exactly that window (3x3x3 points =
+bounded). Lug material there means the back wall is up against the lug.
 
 Measured via the kernel (2026-08-02): free through rot ~11.5, blocked from
-rot ~12.0 (NOT the handoff's ~18 — that was a failed-session artifact).
+rot ~12.5 (NOT the handoff's ~18 — that was a failed-session artifact).
 """
 import math
 
@@ -24,10 +24,10 @@ def _back_wall_window_deg(rot):
 
 
 def _back_wall_base_hits(base_contains, rot):
-    """Count base (tab) sample points inside the back-wall slab's window."""
+    """Count base (lug) sample points inside the back-wall slab's window."""
     a_lo, a_hi = _back_wall_window_deg(rot)
     pts = []
-    for r in (75.35, 75.8, 76.3):
+    for r in (50.5, 51.0, 51.5):
         for i in range(3):
             a = math.radians(a_lo + (a_hi - a_lo) * i / 2.0)
             for z in (2.0, 2.7, 3.4):
@@ -35,9 +35,9 @@ def _back_wall_base_hits(base_contains, rot):
     return sum(base_contains(pts))
 
 
-def test_free_travel_at_seat(tab_points, mount_contains):
-    assert sum(mount_contains(tab_points, rot=SEAT_ROT)) == 0
-    assert sum(mount_contains(tab_points, rot=SEAT_ROT + 2)) == 0
+def test_free_travel_at_seat(lug_points, mount_contains):
+    assert sum(mount_contains(lug_points, rot=SEAT_ROT)) == 0
+    assert sum(mount_contains(lug_points, rot=SEAT_ROT + 2)) == 0
 
 
 def test_back_wall_stop_free_before_onset(base_contains):

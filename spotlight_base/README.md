@@ -1,112 +1,73 @@
 # Spotlight Twist-Lock Ceiling Mount
 
-CadQuery ceiling-mount twist-lock spotlight base (`base.py`). An Ø150 base
-plate screws flat to the real Ø150 ceiling base, an Ø156 cap twists ~10° over
-it, and the spotlight screws onto the cap.
+CadQuery ceiling-mount twist-lock spotlight base (`base.py`). An Ø100 base plate screws to flat plaster using the existing 78 mm-spaced holes, an Ø108 cap twists ~10° over it, and a Ø40 spotlight screws onto the cap.
 
 ## Design
 
-- **Base (ceiling side):** Ø150 annulus (`plate_radius` 75) × 4 mm, central
-  Ø50 wire hole, 2× M4 socket-head screws counterbored flush at r=39 (78 mm
-  chord — matches the real ceiling hole spacing). Underside ring pocket
-  r28–66 saves ~13 cm³.
-- **Lock:** 3 tabs on the base outer rim at 0°/120°/240° (`lock_width` 8,
-  `lock_protrusion` 1.5), built by bending flat lip geometry along
-  `bend_r = plate_radius + 1.0` in 24 touching slices (`cylindric_bend`).
-- **Cap (light side):** Ø156 (`cap_radius` 78), 2.5 mm disc + 14 mm skirt
-  reaching the ceiling (hides base + screws), 3 rim channels 10° behind the
-  tabs (`ch_ang_rot = -10`): drop-on at `rot=0`, seat at `rot=10`.
-- **Spotlight mount:** the spotlight screws onto the flat disc — **no central
-  boss** (removed by design). A Ø2.9 self-tap pilot goes through the disc.
-  Cup-side disc pocket r8–68 saves ~13 cm³.
+- **Base:** Ø100 (`plate_radius` 50) × 3 mm, central Ø40 wire hole, 2× M4 counterbored screw holes at r=39. The underside ring pocket spans r30–48 and leaves a 1.8 mm skin.
+- **Lock:** three monolithic, revolve-built lugs at 0°/120°/240°. Each lug is 14 mm of rim arc, 2 mm proud, 3 mm high at the root, with a 1.2 mm stepped lip and 0.8 mm fused-root fillets.
+- **Cap:** Ø108 (`cap_radius` 54), 2 mm disc, 13 mm skirt, 1.8 mm wall ring, and three channels 10° behind the lugs (`ch_ang_rot = -10`): drop-on at `rot=0`, seat at `rot=10`.
+- **Spotlight mount:** flat disc with no central boss, Ø2.9 pilot through the disc, Ø8 wire-exit hole, and a cup-side r8–48 pocket leaving a 1 mm floor.
 
 ## Derived lock radii — never hardcode
 
-The channel is kept glued to the actual tab by deriving all lock radii from
-`plate_radius`. A stale hardcode (e.g. `50.75 + ch_clear` or
-`plate_radius + 1.0` in the mount) silently re-buries the channel in the base.
+The channel stays aligned to the actual lugs through derived radii:
 
+```text
+lug_tip_r = plate_radius + lock_protrusion  # 52
+ch_roof_in = lug_tip_r - roof_capture       # 51.5
+ch_wall_in = lug_tip_r + ch_clear            # 52.2
 ```
-tab_bend_r = plate_radius + 1.0              # bend axis radius
-tab_root_r = tab_bend_r - 1.25               # tab root radius
-tab_tip_r  = tab_root_r + lock_protrusion    # 76.25
-ch_roof_in = tab_tip_r - roof_capture        # 75.65  (roof overhang inner r)
-ch_wall_in = tab_tip_r + ch_clear            # 76.45  (channel wall inner r)
-```
+
+The roof inner radius is outside the lug full-height root (`lug_step_r = 51.5`) so the twist does not graze the root.
 
 ## Key decisions
 
-- **Twist lock on the outer rim** (3-way symmetry), not a central hub — leaves
-  the wire path and cavity unobstructed. User-chosen.
-- **Ø156 cap over Ø150 base:** 3 mm overhang hides the base edge from the side.
-- **Skirt reaches the ceiling:** base and screw heads fully enclosed.
-- **Screws counterbored flush** (socket-head M4) so the cap face clears them.
-- **No central boss** (user-confirmed): the spotlight mounts on the flat disc
-  via a Ø2.9 self-tap pilot. Any doc mentioning a Ø9.5 boss is stale.
-- **`rim_channel()` is built from annular-sector unions** (outer wall + roof
-  overhang + back-wall slab) — NOT a difference-based void — so the back-wall
-  rotation stop survives the boolean.
-- **Known artifact (accepted):** `cylindric_bend()` slice boundaries create
-  coincident faces → CGAL reports non-manifold edges / extra volumes. Do not
-  chase it; the OCC classifier probes still work.
+- Twist lock on the outer rim with three-way symmetry; the wire path and cavity remain unobstructed.
+- Compact Ø100 base / Ø108 cap; no Ø150 canopy exists to cover.
+- Solid thin cap disc hides the base and screws while supporting the Ø40 spotlight.
+- The cap skirt reaches the ceiling and encloses the base edge and screw heads.
+- `rim_channel()` uses annular-sector unions for the outer wall, roof overhang, and back-wall slab. The back-wall stop is not represented by a difference-based void.
+- Monolithic lugs replace the old `cylindric_bend` slice path, removing its accepted seam/non-manifold artifact.
 
 ## Measured fit (OCC kernel, 2026-08-02)
 
 | Quantity | Value |
 |---|---|
-| Tab angular center | 0° (tabs on fold axes) |
-| Tab tip radius | ≈ 76.0 (crest tapers 2.4 at root r≤75 → ~1.0 at tip) |
-| Back-wall stop onset (from seat `rot=10`) | `rot≈12` (NOT the earlier 18 guess) |
-| Pullout roof catch (mount drop) | ~0.3–0.5 mm |
-| Seat roof clearance | ~0.3–0.5 mm (no interference) |
+| Lug angular center | 0° |
+| Lug tip radius | 52 mm |
+| Lug lip top, assembly frame | z=3.2 mm |
+| Channel roof bottom, seated assembly frame | z=4.0 mm |
+| Seat roof clearance | 0.8 mm |
+| Channel roof thickness | 1.0 mm |
+| Back-wall stop onset | approximately `rot=12–13°` |
+| Pullout roof catch | approximately 1.0–1.5 mm mount drop in sparse probe |
+| Tilt probes | pass at -0.5 mm and +0.3 mm assembly shifts |
 
 ## Verification — pytest is the only trusted oracle
 
 ```bash
 source /home/ubuntu/workspace/.venv/bin/activate
-python -m pytest spotlight_base/tests -q      # ~8 s, budget < 60 s
+python -m pytest spotlight_base/tests -q
 ```
 
-The suite probes the cached fused solids (`spotlight_base/.cache/base_fused.brep`
-= 1 solid 49.3 cm³, `mount_fused.brep` = 4 solids 42.1 cm³) with OCC
-`BRepClass3d_SolidClassifier` — the only tool correct on this model's
-double-walled tessellation. **Do not use trimesh / pymeshfix / manifold3d**
-(all proven wrong; removed from the venv).
+The suite probes the cached fused solids (`base_fused.brep` = 1 solid,
+14.63 cm³; `mount_fused.brep` = 4 solids, 18.03 cm³) with
+`BRepClass3d_SolidClassifier`. Total modeled volume is 32.66 cm³, approximately
+40.5 g at PLA density 1.24 g/cm³. Do not use trimesh, pymeshfix, or manifold3d.
 
-- **Tiers:** `test_parameters.py` (pure-arithmetic invariants) →
-  `test_classifier.py` (**oracle**, gates everything — if it fails, STOP and
-  fix the probe, not the design) → `test_seat_fit.py` / `test_rotation.py` /
-  `test_pullout.py` / `test_strength.py` (sparse assembly-frame integration,
-  ≤ 200 pts/pose).
-- **Frame discipline:** assembly frame ONLY — base at z 2..6, mount origin at
-  `mount_offset_z = -10.5`; seat pose is mount rotation +10 (`rot=10`).
-  Expected values come from `base.py` params, never from eyeballed output.
-- **Anti-iteration rules:** classifier first; assert, don't eyeball; one
-  surprise → one new targeted assertion (never re-run a 20-pose sweep); params
-  are the spec; sparse sampling by construction; never add a mesh-repair path.
-
-### OCC API gotchas
-
-- `BRepClass3d_SolidClassifier(S, pnt, tol)` and `.Perform(pnt, tol)` both
-  require the tolerance argument (no 2-arg / 1-arg forms).
-- Treat `IN` **and** `ON` as occupied.
-- Read the `.brep` cache via `BRepTools.Read_s` + `BRep_Builder` +
-  `TopExp_Explorer`; always iterate `.Solids()` (the mount is 4 solids; OCC
-  won't merge coincident-face solids). Re-fusing the base takes ~75 s — load
-  the cache, never re-fuse in a long script.
+- **Tiers:** parameter invariants → classifier oracle → seat / rotation / pullout / tilt / strength integration tests.
+- **Frame:** assembly only; base at z 2..5, mount origin at `mount_offset_z = -10`, seated mount rotation `rot=10`.
+- Treat both `IN` and `ON` as occupied. Load cached BREP solids rather than re-fusing them in probes.
 
 ## Layout
 
-- `base.py` — the model (`VIEW_MODE` switch: assembled / base_plate /
-  mount_plate / diff_check).
-- `tests/` — the verification suite (`conftest.py` holds the one true assembly
-  frame + the OCC probe).
-- `scripts/rebuild_cache.py` — regenerate `.cache/*.brep` fused solids.
-- `.cache/` — cached fused solids (tracked; regenerate only on geometry change).
-- `output/` — exported `base.step` / `base.stl` / `mount.step` / `mount.stl`.
+- `base.py` — model and view modes (`assembled`, `base_plate`, `mount_plate`, `diff_check`).
+- `tests/` — deterministic verification suite and the assembly-frame OCC probe.
+- `scripts/rebuild_cache.py` — regenerate cached BREP solids.
+- `.cache/` — tracked fused-solid caches.
+- `output/` — exported STEP and STL files.
 
 ## Process
 
-Plans live in `docs/plans/`. A plan folder is deleted once all its phases are
-done — must-keep facts are distilled into this README first; git history keeps
-the rest. Only pending plans remain.
+Plans live in `docs/plans/`. Delete a plan folder once all its phases are done; distill must-keep facts into this README first. Only pending plans remain.

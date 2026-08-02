@@ -4,7 +4,7 @@ import math
 
 import pytest
 
-from conftest import SEAT_ROT, tab_grid
+from conftest import SEAT_ROT, lug_grid
 
 
 def _rotate_z(pt, deg):
@@ -16,41 +16,39 @@ def _rotate_z(pt, deg):
 def test_frame_sanity_cross_check(base_contains, mount_contains):
     """Both probes agree in the assembly frame: annulus solid is base-only,
     roof solid is mount-only."""
-    assert base_contains([(50.0, 0.0, 4.0)]) == [True]
-    assert mount_contains([(50.0, 0.0, 4.0)]) == [False]
-    assert base_contains([(76.0, 0.0, 3.8)]) == [False]
-    assert mount_contains([(76.0, 0.0, 3.8)]) == [True]
+    assert base_contains([(49.0, 0.0, 3.5)]) == [True]
+    assert mount_contains([(49.0, 0.0, 3.5)]) == [False]
+    assert base_contains([(52.0, 0.0, 4.5)]) == [False]
+    assert mount_contains([(52.0, 0.0, 4.5)]) == [True]
 
 
 def test_frame_oracle_settles_interference(base_contains, mount_contains):
-    """At seat (rot=10, drop=0) no tab material may sit inside the mount.
-    This is the exact OCC cross-check for the '0.9 mm into the roof' open
-    question from the handoff — the answer comes from the kernel, not a render."""
-    pts = tab_grid()
+    """At seat (rot=10, drop=0) no lug material may sit inside the mount."""
+    pts = lug_grid()
     in_base = base_contains(pts)
-    assert any(in_base), "tab grid must intersect the base at +X"
-    tab_pts = [p for p, hit in zip(pts, in_base) if hit]
-    assert len(tab_pts) >= 10, "expected a decent sample of tab material"
-    hit_mount = mount_contains(tab_pts)
+    assert any(in_base), "lug grid must intersect the base at +X"
+    lug_pts = [p for p, hit in zip(pts, in_base) if hit]
+    assert len(lug_pts) >= 10, "expected a decent sample of lug material"
+    hit_mount = mount_contains(lug_pts)
     assert not any(hit_mount), (
-        f"{sum(hit_mount)}/{len(tab_pts)} tab points collide with the mount at seat"
+        f"{sum(hit_mount)}/{len(lug_pts)} lug points collide with the mount at seat"
     )
 
 
-def test_seat_clearance(tab_points, mount_contains):
-    """Seat pose: zero tab points inside mount material."""
-    hit = mount_contains(tab_points, rot=SEAT_ROT, z_off=0.0)
-    assert sum(hit) == 0, f"{sum(hit)}/{len(tab_points)} tab points in mount at seat"
+def test_seat_clearance(lug_points, mount_contains):
+    """Seat pose: zero lug points inside mount material."""
+    hit = mount_contains(lug_points, rot=SEAT_ROT, z_off=0.0)
+    assert sum(hit) == 0, f"{sum(hit)}/{len(lug_points)} lug points in mount at seat"
 
 
-def test_threefold_symmetry(tab_points, base_contains, mount_contains):
-    """Rotating the +X tab grid by 120/240 deg reproduces the same results
+def test_threefold_symmetry(lug_points, base_contains, mount_contains):
+    """Rotating the +X lug grid by 120/240 deg reproduces the same results
     (catches fold-axis / wiring bugs)."""
-    pts120 = [_rotate_z(p, 120.0) for p in tab_points]
-    pts240 = [_rotate_z(p, 240.0) for p in tab_points]
+    pts120 = [_rotate_z(p, 120.0) for p in lug_points]
+    pts240 = [_rotate_z(p, 240.0) for p in lug_points]
     assert all(base_contains(pts120)), "120 deg copy must be inside base"
     assert all(base_contains(pts240)), "240 deg copy must be inside base"
-    hit0 = sum(mount_contains(tab_points))
+    hit0 = sum(mount_contains(lug_points))
     hit120 = sum(mount_contains(pts120))
     hit240 = sum(mount_contains(pts240))
     assert hit0 == hit120 == hit240, f"mount contact counts differ: {hit0}/{hit120}/{hit240}"

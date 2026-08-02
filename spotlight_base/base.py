@@ -61,7 +61,7 @@ ch_clear = 0.2        # Radial clearance to the lug tip face (mm)
 ch_back_wall = -10.5  # Groove back wall (fold-local deg): mount-local -20.5, lug stop at rot ~12.5
 ch_front = 22.0       # Groove open entrance (fold-local deg): mount-local +12, clears lug entry at drop
 ch_roof_end = 22.0    # Roof front edge (fold-local deg): lip captured from drop through seat
-roof_capture = 0.6    # Roof overhang depth past the lug tip (mm); == lug_tip_r - lug_step_r
+roof_capture = 0.5    # Roof overhang depth past the lug tip (mm); == lug_tip_r - lug_step_r
 ch_groove_bot = 11.5  # Groove floor (mount-local z); 0.5mm clear below the lip bottom (z 12.0)
 ch_groove_top = 14.0  # Groove ceiling / roof bottom (mount-local z); seat clearance 0.8mm over lip top (13.2)
 ch_block_top = 15.0   # Channel block top / roof top (mount-local z) = ceiling plane; roof thickness 1.0
@@ -74,7 +74,7 @@ disc_pocket_outer = 48.0  # Pocket outer radius: leaves a solid ring to the wall
 # lug_step_r so the phase-2 roof (inner radius = lug_tip_r - roof_capture = 51.4)
 # clears the full-height root and only captures the 1.2mm lip.
 lug_tip_r = plate_radius + lock_protrusion   # 52: lug tip radius (mm)
-lug_step_r = lug_tip_r - 0.6                 # 51.4: full-height root radius, lip starts past this
+lug_step_r = lug_tip_r - 0.5                 # 51.5: full-height root radius, lip starts past this
 lug_overlap = 0.5             # Lug root buried this far into the plate rim (mm)
 lug_root_r = plate_radius - lug_overlap      # 49.5: guarantees a true boolean union
 ch_roof_in = lug_tip_r - roof_capture   # Roof overhang inner radius (mm)

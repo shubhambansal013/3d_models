@@ -7,8 +7,8 @@ Run after any geometry-affecting change to base.py:
     python -m pytest spotlight_base/tests -q
 
 The contract (enforced by tests/conftest.py):
-  - .cache/base_fused.brep  -> 1 solid,  ~49.3 cm3
-  - .cache/mount_fused.brep -> 4 solids, ~42.1 cm3
+  - .cache/base_fused.brep  -> 1 solid,  ~14.7 cm3
+  - .cache/mount_fused.brep -> 4 solids, ~19.5 cm3
 """
 import os
 import sys
@@ -30,15 +30,10 @@ def _write(solid, path):
 
 
 def main():
-    print("Base plate: fusing 73 touching-slice solids into one ...")
-    bp = sb.base_plate()
-    solids = list(bp.Solids())
-    fused = solids[0]
-    for s in solids[1:]:
-        fused = fused.fuse(s)
-    _write(fused, os.path.join(CACHE_DIR, "base_fused.brep"))
+    print("Base plate: single fused solid (monolithic lugs, no slices) ...")
+    _write(sb.base_plate(), os.path.join(CACHE_DIR, "base_fused.brep"))
 
-    print("Mount plate: cap + skirt + 3 channels (4 solids kept separate) ...")
+    print("Mount plate: cap + 3 channels (4 solids kept separate) ...")
     _write(sb.mount_plate(), os.path.join(CACHE_DIR, "mount_fused.brep"))
 
 

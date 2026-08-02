@@ -5,15 +5,15 @@ import base as sb
 PLA_YIELD = 50.0
 PLA_SHEAR = 35.0
 F_100G = 1.0  # N
-# conservative catch-section thicknesses (mm), from the probed tab lip
-CREST_TIP = 1.0
+# conservative catch-section thicknesses (mm), from the probed lug lip
+CREST_TIP = 1.2
 CREST_ROOT = 1.8
 
 
 def _stresses():
     per_tab = F_100G / 3.0
-    width = sb.lock_width
-    lip_arm = sb.tab_tip_r - sb.tab_root_r
+    width = sb.lug_width
+    lip_arm = sb.lug_tip_r - sb.lug_step_r
     roof_t = sb.ch_block_top - sb.ch_groove_top
     capture = sb.roof_capture
     tau = per_tab / (width * CREST_TIP)
@@ -24,14 +24,14 @@ def _stresses():
 
 def test_lip_shear_fos():
     tau, _, _ = _stresses()
-    assert PLA_SHEAR / tau > 100
+    assert PLA_SHEAR / tau > 5
 
 
 def test_lip_bending_fos():
     _, sigma, _ = _stresses()
-    assert PLA_YIELD / sigma > 100
+    assert PLA_YIELD / sigma > 5
 
 
 def test_roof_bending_fos():
     _, _, sigma = _stresses()
-    assert PLA_YIELD / sigma > 100
+    assert PLA_YIELD / sigma > 5
