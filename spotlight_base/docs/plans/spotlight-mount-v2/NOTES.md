@@ -102,4 +102,4 @@ of a session. Keep entries short.
 - Deviations: wire Ø10→Ø8 and pilot Ø5.8→Ø2.9 are corrections to match the plan
   (old code labels were wrong); `ch_roof_in` sits exactly on the root radius
   (0.6 = tip − step) rather than clear of it.
-- Commit: (see PLAN phase-2 row).
+- Commit: 700907d (cap code), 5a470f5 (PLAN/NOTES).
