@@ -58,7 +58,7 @@ also kill the slice-artifact, so the base becomes a genuine fused single solid.
 | Phase | Title | Est. | Status | Notes |
 |---|---|---|---|---|
 | 1 | Base rebuild: Ø100×3 + monolithic lugs | ~6 min | done | `base.py` params + `lock_lug()`, remove `cylindric_bend` path |
-| 2 | Cap rebuild: Ø108 thin disc + retuned channels | ~6 min | pending | depends on 1 (lug radii) |
+| 2 | Cap rebuild: Ø108 thin disc + retuned channels | ~6 min | done | depends on 1 (lug radii) |
 | 3 | Cache rebuild + volume smoke | ~5 min | pending | `scripts/rebuild_cache.py`, new contract ~15 / ~19.5 cm³ |
 | 4 | Harness + oracle rebuild (conftest, params, classifier) | ~6 min | pending | gates everything downstream |
 | 5 | Integration tests: seat / rotation / pullout / NEW tilt | ~6 min | pending | depends on 4 |
