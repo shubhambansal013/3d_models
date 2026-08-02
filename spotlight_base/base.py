@@ -47,7 +47,7 @@ lock_height = 3.0        # Overall height of the locking lip (mm)
 lock_gap_height = 1.0    # Vertical slot height of the locking channel (mm)
 lock_taper = 1.2         # Ramp length on the locking tab (mm)
 lock_width = 8.0         # Width of the tab engagement surface (mm)
-lock_protrusion = 1.0    # Total tab lip span (radial) (mm)
+lock_protrusion = 1.5    # Total tab lip span (radial) (mm)
 
 # ============================================================
 # Cap & Lock Channel (phase 2)
@@ -451,9 +451,9 @@ def lock_channel():
 def mount_plate():
     boss_r = 4.75    # O9.5 central boss (light-side, spotlight mount)
     boss_h = 5.0
-    pilot_r = 1.45   # O2.9 pilot hole through the boss
+    pilot_r = 2.9   # O2.9 pilot hole through the boss
     wire_off = 12.0  # O8 wire-exit hole center radius
-    wire_r = 4.0
+    wire_r = 5.0
 
     solid = cyl(cap_radius, cap_disc_h)
     solid = solid.fuse(cyl(cap_radius, cap_skirt_h, z0=cap_disc_h))
