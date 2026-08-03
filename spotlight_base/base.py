@@ -301,7 +301,7 @@ def rim_channel():
 
     a = annular_segment(r_wall, r_outer, ch_groove_bot, ch_block_top, ch_back_wall, ch_front)
     b = annular_segment(ch_roof_in, r_wall, ch_groove_top, ch_block_top, ch_back_wall, ch_roof_end)
-    c = annular_segment(r_groove_in, r_wall, ch_groove_bot, ch_groove_top, ch_back_wall - 0.5, ch_back_wall)
+    c = annular_segment(r_groove_in, r_wall, ch_groove_bot, ch_groove_top, ch_back_wall - 0.5, ch_back_wall + 1)
     return a.fuse(b).fuse(c)
 
 
@@ -312,7 +312,6 @@ def lock_channel():
 
 
 def mount_plate():
-    pilot_r = 1.45   # O2.9 pilot hole through the disc (no central boss)
     wire_off = 12.0  # O8 wire-exit hole center radius
     wire_r = 4.0     # O8 wire exit hole
 
@@ -320,7 +319,7 @@ def mount_plate():
     solid = solid.fuse(cyl(cap_radius, cap_skirt_h, z0=cap_disc_h))
 
     hollow = cyl(ch_wall_in, cap_skirt_h + 0.2, z0=cap_disc_h - 0.1)
-    pilot = cyl(pilot_r, cap_disc_h + 2, z0=-1)
+    pilot = cyl(screw_through_r, cap_disc_h + 2, z0=-1)
     wire_hole = cyl(wire_r, cap_disc_h + 2, z0=-1).translate((wire_off, 0, 0))
 
     # Cup-side (invisible) lightening pocket: leaves a 1.0mm floor on the
