@@ -16,8 +16,8 @@ BASE_EXPECTED = [
     (0.0, 0.0, 3.5, False),     # wire-hole center
     (30.0, 0.0, 3.5, True),     # annulus mid-band
     (30.0, 0.0, 4.8, True),     # annulus near ceiling face
-    (48.0, 0.0, 3.5, True),     # annulus outer band
-    (49.5, 0.0, 2.5, True),     # lug root (r=49.5, full height)
+    (48.0, 0.0, 3.5, True),     # annulus outer band (r<relief_in)
+    (49.5, 0.0, 2.5, True),     # shelf lug (r 49..52, z 2..3.2)
     (52.5, 0.0, 2.5, False),    # beyond lug tip
     (0.0, 39.0, 3.0, False),    # M4 through-hole (90 deg)
     (0.0, -39.0, 3.0, False),   # M4 through-hole (270 deg)
@@ -26,11 +26,14 @@ BASE_EXPECTED = [
     (35.0, 0.0, 2.8, False),    # ring-pocket void (z < 3.2)
     (35.0, 0.0, 4.5, True),     # above pocket -> solid skin
     (45.0, 0.0, 2.8, False),    # widened pocket void
-    (49.0, 0.0, 2.8, True),     # outside the pocket band (r>48) -> solid
-    (51.0, 0.0, 2.5, True),     # lug body at root (full height 3mm)
-    (51.7, 0.0, 3.0, True),     # lug stepped lip (z 1.2..3.0 at r 51.4..52)
-    (51.7, 0.0, 3.5, False),    # above the lug lip
+    (49.2, 0.0, 2.8, True),     # shelf lip band (r 49..52, z 2..3.2)
+    (51.0, 0.0, 2.5, True),     # shelf body
+    (51.7, 0.0, 3.0, True),     # shelf lip top (z < 2 + lip_h = 3.2)
+    (51.7, 0.0, 3.5, False),    # above the shelf (no rib anymore)
     (52.3, 0.0, 2.5, False),    # beyond the lug tip radius
+    (49.5, 0.0, 4.5, False),    # top-rim relief void (r 48.8..50, z 3.2..5)
+    (49.5, 0.0, 4.9, False),    # relief near ceiling face
+    (48.5, 0.0, 4.5, True),     # inside the relief -> plate still solid
 ]
 
 # (x, y, z, expected_in_mount)  -- assembly frame, seat pose (rot=10, z_off=0)
@@ -48,13 +51,16 @@ MOUNT_EXPECTED = [
     (0.0, 0.0, -12.0, False),       # no boss below the disc (removed by design)
     (0.0, 0.0, -11.0, False),       # pilot-hole void (through the disc)
     (12.0, 0.0, -9.0, False),       # wire-exit hole (r=4 at r=12 offset)
-    (52.0, 0.0, 4.0, True),         # channel roof (ch_roof_in=51.4, roof at z 4..5)
+    (52.0, 0.0, 4.0, True),         # channel roof (ch_roof_in=49, roof at z 4..5)
     (52.0, 0.0, 4.5, True),         # channel roof upper
     (52.0, 0.0, 5.2, False),        # above the roof top (ch_block_top + mount_offset_z = 5)
     (52.0, 0.0, 1.5, False),        # groove void (floor at z 1.5)
     (51.5, 0.0, 1.5, False),        # groove void, inner part (inside roof)
-    (51.0, 0.0, 4.0, False),        # radially inside the roof -> void
-    (51.4, -10.5, 1.5, True),        # back-wall slab (assembly ang -10.5°)
+    (51.0, 0.0, 4.0, True),         # roof overhang reaches r 49 (was void before)
+    (49.5, 0.0, 4.5, True),         # roof inner band (r>=49, z 4..5)
+    (48.0, 0.0, 4.5, False),        # just inside the roof -> void
+    (49.0, 0.0, 3.5, False),        # below the roof bottom -> groove void
+    (51.4, -10.5, 1.5, True),       # back-wall slab (assembly ang -10.5°)
     (50.0, 12.0, 1.5, False),       # front of the channel (assembly ang ~ 12°)
 ]
 

@@ -144,9 +144,9 @@ def grid(r_lo, r_hi, n_r, ang_lo, ang_hi, n_ang, z_lo, z_hi, n_z):
 
 
 def lug_grid(n_rad=5, n_ang=9, n_z=6):
-    """Assembly-frame grid covering one lug (r band ~50.5..52.2, angular
+    """Assembly-frame grid covering one lug (r band ~48.5..52.2, angular
     span ~±9°, z 2..5). Size bounded: 5*9*6 = 270 pts max."""
-    r_lo, r_hi = sb.lug_root_r - 0.5, sb.lug_tip_r + 0.2
+    r_lo, r_hi = sb.lug_step_r - 0.5, sb.lug_tip_r + 0.2
     z_lo, z_hi = 2.0, 2.0 + sb.lock_height
     ang_span = math.degrees(sb.lug_width / sb.plate_radius) / 2.0
     return grid(r_lo, r_hi, n_rad, -ang_span, ang_span, n_ang, z_lo, z_hi, n_z)

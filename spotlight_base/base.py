@@ -2,11 +2,11 @@
 CadQuery spotlight twist-lock ceiling mount.
 
 Base plate (ceiling side): O100 annulus screwed flat to the real ceiling
-(2x M4, holes 78mm apart), with 3 monolithic lugs on its outer rim for the
-twist-lock. Mount plate (light side): O108 cap that twists ~10deg over the base
-rim, 2mm disc (1mm cup-side pocket) + 13mm skirt; the spotlight screws onto the
-flat disc (no central boss). Channels retuned to the phase-1 lugs
-(roof captures the 1.2mm lip; back-wall stop at rot ~12).
+(2x M4, holes 78mm apart), with 3 monolithic shelf lugs on its outer rim for
+the twist-lock. Mount plate (light side): O108 cap that twists ~10deg over the
+base rim, 2mm disc (1mm cup-side pocket) + 13mm skirt; the spotlight screws
+onto the flat disc (no central boss). The roof overhangs 3mm past the lug tip
+and grips each 3mm-wide shelf lip (back-wall stop at rot ~11.5-12).
 """
 import math
 import cadquery as cq
@@ -40,14 +40,13 @@ screw_counterbore_r = 4.1    # Counterbore radius for M4 pan head (O8.2, mm)
 screw_counterbore_d = 2.0    # Counterbore depth (mm); leaves 1.0mm skin
 
 # ============================================================
-# Lock Lugs (monolithic twist-lock teeth, revolve-built, no cylindric_bend)
+# Lock Lugs (monolithic twist-lock shelf teeth, revolve-built, no cylindric_bend)
 # ============================================================
 lock_protrusion = 2.0     # Radial proud of the lug past the plate rim (mm); tip at r 52
 lug_width = 14.0          # Lug arc width measured along the rim (mm)
 lug_angles = [0, 120, 240]  # Angular centers of the three lugs (deg)
-lock_height = plate_thickness  # Full lug height at the root (mm)
-lip_h = 1.2               # Height of the stepped tip lip (mm); lip top native z = 1.2
-root_fillet = 0.8         # Fillet radius where the lug meets the plate rim (mm)
+lock_height = plate_thickness  # Full plate height at the root (mm)
+lip_h = 1.2               # Height of the shelf lip (mm); lip top native z = 1.2
 
 # ============================================================
 # Cap & Lock Channel
@@ -63,7 +62,8 @@ ch_clear = 0.2        # Radial clearance to the lug tip face (mm)
 ch_back_wall = -10.5  # Groove back wall (fold-local deg): mount-local -20.5, lug stop at rot ~12
 ch_front = 22.0       # Groove open entrance (fold-local deg): mount-local +12, clears lug entry at drop
 ch_roof_end = 22.0    # Roof front edge (fold-local deg): lip captured from drop through seat
-roof_capture = 0.5    # Roof overhang depth past the lug tip (mm); == lug_tip_r - lug_step_r
+roof_capture = 3.0    # Lock grip: roof overhang depth past the lug tip (mm); the
+                      # roof reaches 3mm inside the tip and grips the full 3mm lip.
 ch_groove_bot = 11.5  # Groove floor (mount-local z); 0.5mm clear below the lip bottom (z 12.0)
 ch_groove_top = 14.0  # Groove ceiling / roof bottom (mount-local z); seat clearance 0.8mm over lip top (13.2)
 ch_block_top = 15.0   # Channel block top / roof top (mount-local z) = ceiling plane; roof thickness 1.0
@@ -72,19 +72,25 @@ disc_pocket_inner = 8.0   # Pocket inner radius: clears the central pilot (mm)
 disc_pocket_outer = 48.0  # Pocket outer radius: leaves a solid ring to the wall (mm)
 
 # Derived lock geometry (keep the channels glued to the actual lug at any scale):
-# lug_tip_r is the lug's outermost radius; the root stays full-height out to
-# lug_step_r so the phase-2 roof (inner radius = lug_tip_r - roof_capture = 51.5)
-# clears the full-height root and only captures the 1.2mm lip.
+# lug_tip_r is the lug's outermost radius; the lug is a low SHELF (r lug_step_r..tip,
+# lip_h tall) with no upper rib, so the roof (inner radius = lug_tip_r - roof_capture)
+# can overhang 3mm inside the tip and grip the whole shelf lip without grazing.
 lug_tip_r = plate_radius + lock_protrusion   # 52: lug tip radius (mm)
-lug_step_r = lug_tip_r - 0.5                 # 51.5: full-height root radius, lip starts past this
-lug_overlap = 0.5             # Lug root buried this far into the plate rim (mm)
-lug_root_r = plate_radius - lug_overlap      # 49.5: guarantees a true boolean union
-ch_roof_in = lug_tip_r - roof_capture   # Roof overhang inner radius (mm)
-ch_wall_in = lug_tip_r + ch_clear       # Channel outer-wall inner radius (mm)
+lug_step_r = lug_tip_r - roof_capture        # 49: shelf lip inner radius (mm)
+ch_roof_in = lug_tip_r - roof_capture        # Roof overhang inner radius (mm)
+ch_wall_in = lug_tip_r + ch_clear            # Channel outer-wall inner radius (mm)
 ch_bury = 0.15            # Channel burial into the wall ring past ch_wall_in (mm):
                           # the roof + back-wall slab genuinely overlap the solid wall
                           # ring so mount_plate() fuses into ONE solid (no coincident
                           # faces -> the slicer sees the skirt cavity, not solid infill)
+
+# Plate top-rim relief: the roof (r ch_roof_in..) and its pullout travel sit inside
+# the plate radius, so the ceiling-side rim is cut back to relief_in over the three
+# channel arcs (angular span = the roof's full drop->seat rotation sweep, plate-local).
+relief_in = lug_step_r - 0.2              # 48.8: relief inner radius (mm)
+relief_z_lo = lip_h                       # 1.2: shelf top; relief spans z 1.2..3
+relief_ang_lo = ch_back_wall + ch_ang_rot # -20.5: roof fold-local at drop, plate-local
+relief_ang_hi = ch_roof_end               # 22: roof fold-local at seat, plate-local
 
 # Angular half-span of one lug about its center (arc mm -> rad at the rim).
 lug_arc_angle = math.degrees(lug_width / plate_radius)
@@ -179,42 +185,23 @@ def threefold_pattern(build_fn, fuse=True):
     return cq.Compound.makeCompound(solids)
 
 
-def _lug_root_edges(shape, r, z_top, tol=0.02):
-    """Straight edges at radius `r` running the full plate height z 0..z_top:
-    exactly the two concave junctions where a lug's side face meets the rim."""
-    out = []
-    for e in shape.Edges():
-        vs = e.Vertices()
-        if len(vs) != 2:
-            continue
-        p0, p1 = vs[0], vs[1]
-        r0 = math.hypot(p0.X, p0.Y)
-        r1 = math.hypot(p1.X, p1.Y)
-        zs = sorted([p0.Z, p1.Z])
-        if abs(r0 - r) < tol and abs(r1 - r) < tol and abs(zs[0]) < tol and abs(zs[1] - z_top) < tol:
-            out.append(e)
-    return out
-
-
 def lock_lug():
     """One monolithic twist-lock lug centred on +X, on the plate rim.
 
-    Profile (r-z): full `lock_height` rib out to `lug_step_r` (51.4), then a
-    vertical step down to a `lip_h` (1.2) lip over the outer `lock_protrusion`
-    band (r .. lug_tip_r = 52). Built by revolving the r-z profile over the
-    lug's angular span (`lug_width` mm of arc at the rim) - a single clean
-    solid, no cylindric_bend slices. The root is buried `lug_overlap` into the
-    plate rim so the base boolean is a true union (single solid); the 0.8 mm
-    root fillet is applied on the fused junction edges in base_plate()."""
+    Profile (r-z): a 3mm-wide shelf (r lug_step_r..lug_tip_r = 49..52), lip_h
+    (1.2) tall, on the plate's light-side face. The roof overhangs 3mm past the
+    tip and grips the shelf's top face on pullout; there is no upper rib (the
+    roof occupies that z-band), so the back-wall stop acts on the shelf's back
+    face. Built by revolving the r-z profile over the lug's angular span
+    (`lug_width` mm of arc at the rim) - a single clean solid, no cylindric_bend
+    slices. The shelf overlaps the plate ring (r 49..50) so the base boolean is
+    a true union (single solid)."""
     half = lug_arc_angle / 2.0
     profile = [
-        (lug_root_r, 0.0),
         (lug_step_r, 0.0),
         (lug_tip_r, 0.0),
         (lug_tip_r, lip_h),
         (lug_step_r, lip_h),
-        (lug_step_r, lock_height),
-        (lug_root_r, lock_height),
     ]
     lug = revolve_profile(profile, angle=lug_arc_angle)
     return rotate_deg(lug, -half, axis=(0, 0, 1))
@@ -247,6 +234,16 @@ def base_pocket():
     return pocket
 
 
+def base_top_relief():
+    """Three arc-shaped pockets cut in the plate's ceiling-side rim so the
+    mount's roof (r ch_roof_in.., z relief_z_lo..plate top) can overhang 3mm
+    inside the plate radius and still seat and travel on pullout. One per lug;
+    the angular span covers the roof's full drop->seat rotation sweep."""
+    return threefold_pattern(
+        lambda: annular_segment(relief_in, plate_radius, relief_z_lo,
+                                plate_thickness, relief_ang_lo, relief_ang_hi))
+
+
 def base_plate():
     plate = cyl(plate_radius, plate_thickness)
     wire_hole = cyl(wire_hole_radius, plate_thickness + 2, z0=-1)
@@ -257,12 +254,9 @@ def base_plate():
         sh = rotate_deg(sh, a, axis=(0, 0, 1))
         result = result.cut(sh)
     result = result.cut(base_pocket())
+    result = result.cut(base_top_relief())
     lugs = threefold_pattern(lock_lug, fuse=True)
     result = result.fuse(lugs)
-    # Root fillets at the 6 concave junctions where the lugs meet the rim.
-    edges = _lug_root_edges(result, plate_radius, lock_height)
-    if len(edges) == 6:
-        result = result.fillet(root_fillet, edges)
     return result
 
 
@@ -318,6 +312,7 @@ def lock_channel():
 
 
 def mount_plate():
+    pilot_r = 1.45   # O2.9 pilot hole through the disc (no central boss)
     wire_off = 12.0  # O8 wire-exit hole center radius
     wire_r = 4.0     # O8 wire exit hole
 
@@ -325,7 +320,7 @@ def mount_plate():
     solid = solid.fuse(cyl(cap_radius, cap_skirt_h, z0=cap_disc_h))
 
     hollow = cyl(ch_wall_in, cap_skirt_h + 0.2, z0=cap_disc_h - 0.1)
-    pilot = cyl(screw_through_r, cap_disc_h + 2, z0=-1)
+    pilot = cyl(pilot_r, cap_disc_h + 2, z0=-1)
     wire_hole = cyl(wire_r, cap_disc_h + 2, z0=-1).translate((wire_off, 0, 0))
 
     # Cup-side (invisible) lightening pocket: leaves a 1.0mm floor on the

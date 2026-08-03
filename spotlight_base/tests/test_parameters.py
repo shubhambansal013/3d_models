@@ -41,15 +41,27 @@ def test_assembly_z_invariant():
                - (2 + sb.plate_thickness)) < 1e-9
 
 
-def test_roof_inner_radius_clears_lug_step():
-    # roof inner radius must sit at or outside lug step radius
-    assert sb.ch_roof_in >= sb.lug_step_r - 1e-9
+def test_lock_grip_is_3mm():
+    # the requested lock grip: the roof overhangs 3mm past the lug tip
+    assert abs(sb.roof_capture - 3.0) < 1e-9
+
+
+def test_shelf_lip_is_fully_captured():
+    # the roof inner radius reaches the shelf lip inner edge (lug_step_r), so
+    # the whole 3mm lip is the catch surface
+    assert abs(sb.ch_roof_in - sb.lug_step_r) < 1e-9
+    assert sb.lug_tip_r - sb.lug_step_r > 1.5
+
+
+def test_relief_clears_roof():
+    # plate top-rim relief inner radius stays inside the roof inner radius
+    assert sb.relief_in < sb.ch_roof_in - 1e-9
 
 
 def test_back_wall_band_overlaps_lug_band():
     bw_bot = sb.ch_groove_bot + sb.mount_offset_z
     bw_top = sb.ch_groove_top + sb.mount_offset_z
     lug_bot = 2.0
-    lug_top = 2.0 + sb.lock_height
+    lug_top = 2.0 + sb.lip_h
     overlap = min(bw_top, lug_top) - max(bw_bot, lug_bot)
     assert overlap > 0

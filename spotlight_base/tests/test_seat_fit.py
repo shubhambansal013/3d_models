@@ -14,12 +14,12 @@ def _rotate_z(pt, deg):
 
 
 def test_frame_sanity_cross_check(base_contains, mount_contains):
-    """Both probes agree in the assembly frame: annulus solid is base-only,
+    """Both probes agree in the assembly frame: shelf/annulus solid is base-only,
     roof solid is mount-only."""
-    assert base_contains([(49.0, 0.0, 3.5)]) == [True]
-    assert mount_contains([(49.0, 0.0, 3.5)]) == [False]
-    assert base_contains([(52.0, 0.0, 4.5)]) == [False]
-    assert mount_contains([(52.0, 0.0, 4.5)]) == [True]
+    assert base_contains([(49.5, 0.0, 2.2)]) == [True]
+    assert mount_contains([(49.5, 0.0, 2.2)]) == [False]
+    assert base_contains([(49.5, 0.0, 4.5)]) == [False]
+    assert mount_contains([(49.5, 0.0, 4.5)]) == [True]
 
 
 def test_frame_oracle_settles_interference(base_contains, mount_contains):
