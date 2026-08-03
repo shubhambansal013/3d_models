@@ -15,11 +15,12 @@ def _rotate_z(pt, deg):
 
 def test_frame_sanity_cross_check(base_contains, mount_contains):
     """Both probes agree in the assembly frame: shelf/annulus solid is base-only,
-    roof solid is mount-only."""
+    roof solid is mount-only. The roof now sits OUTSIDE the plate radius, so the
+    roof-contrast point moves to r 51 (roof band, beyond the plate rim)."""
     assert base_contains([(49.5, 0.0, 2.2)]) == [True]
     assert mount_contains([(49.5, 0.0, 2.2)]) == [False]
-    assert base_contains([(49.5, 0.0, 4.5)]) == [False]
-    assert mount_contains([(49.5, 0.0, 4.5)]) == [True]
+    assert base_contains([(51.0, 0.0, 4.5)]) == [False]   # beyond the plate rim
+    assert mount_contains([(51.0, 0.0, 4.5)]) == [True]    # roof overhang band
 
 
 def test_frame_oracle_settles_interference(base_contains, mount_contains):

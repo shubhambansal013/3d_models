@@ -12,8 +12,8 @@ from conftest import SEAT_ROT, grid
 
 
 def _lip_grid():
-    """Targeted grid on the lug's 1.2 mm lip (r ~51.5..52, z 3.2)."""
-    # Lip spans r from lug_step_r (51.5) to lug_tip_r (52.0) at z = 2 + lip_h (3.2)
+    """Targeted grid on the lug's shelf top (r lug_step_r..lug_tip_r = 49..52,
+    z = 2 + lip_h = 3.2). The roof (r 50.5..) catches the outer band on pullout."""
     # Sample 3 radial × 5 angular points on the +X lug
     ang_span = math.degrees(sb.lug_width / sb.plate_radius) / 2.0
     return grid(sb.lug_step_r, sb.lug_tip_r, 3, -ang_span, ang_span, 5, 3.2, 3.2, 1)

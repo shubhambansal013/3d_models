@@ -152,10 +152,28 @@ def lug_grid(n_rad=5, n_ang=9, n_z=6):
     return grid(r_lo, r_hi, n_rad, -ang_span, ang_span, n_ang, z_lo, z_hi, n_z)
 
 
+def twist_lug_grid(n_rad=4, n_ang=9, n_z=5):
+    """Leaner lug grid (180 pts max, <= 200/pose) for the trajectory tests:
+    r band lug_step_r-0.4..lug_tip_r (lip body + tip face), z 2..3.2."""
+    r_lo, r_hi = sb.lug_step_r - 0.4, sb.lug_tip_r
+    z_lo, z_hi = 2.0, 2.0 + sb.lip_h
+    ang_span = math.degrees(sb.lug_width / sb.plate_radius) / 2.0
+    return grid(r_lo, r_hi, n_rad, -ang_span, ang_span, n_ang, z_lo, z_hi, n_z)
+
+
 @pytest.fixture(scope="session")
 def lug_points(base_contains):
     """Lug sample points in the assembly frame that are confirmed inside the
     base (so a mount collision means genuine contact)."""
     pts = lug_grid()
+    in_base = base_contains(pts)
+    return [p for p, hit in zip(pts, in_base) if hit]
+
+
+@pytest.fixture(scope="session")
+def twist_lug_points(base_contains):
+    """Leaner lug sample points (<= 200) for the attach/detach trajectory
+    tests; only points confirmed inside the base count as real contact."""
+    pts = twist_lug_grid()
     in_base = base_contains(pts)
     return [p for p, hit in zip(pts, in_base) if hit]

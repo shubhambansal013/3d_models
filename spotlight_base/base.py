@@ -5,8 +5,11 @@ Base plate (ceiling side): O100 annulus screwed flat to the real ceiling
 (2x M4, holes 78mm apart), with 3 monolithic shelf lugs on its outer rim for
 the twist-lock. Mount plate (light side): O108 cap that twists ~10deg over the
 base rim, 2mm disc (1mm cup-side pocket) + 13mm skirt; the spotlight screws
-onto the flat disc (no central boss). The roof overhangs 3mm past the lug tip
-and grips each 3mm-wide shelf lip (back-wall stop at rot ~11.5-12).
+onto the flat disc (no central boss). The roof overhangs 1.5mm past the lug tip
+and grips each shelf's outer 1.5mm band (back-wall stop at rot ~11.5-12).
+Detach is a ~21deg reverse twist then pull: the roof sits OUTSIDE the plate
+radius (ch_roof_in 50.5 > plate_radius 50), so at rot -21 it clears both the
+plate rim and every lug and the mount slides off freely.
 """
 import math
 import cadquery as cq
@@ -65,8 +68,11 @@ ch_clear = 0.4        # Radial sliding clearance to the lug tip face (mm). The
 ch_back_wall = -10.5  # Groove back wall (fold-local deg): mount-local -20.5, lug stop at rot ~12
 ch_front = 22.0       # Groove open entrance (fold-local deg): mount-local +12, clears lug entry at drop
 ch_roof_end = 22.0    # Roof front edge (fold-local deg): lip captured from drop through seat
-roof_capture = 3.0    # Lock grip: roof overhang depth past the lug tip (mm); the
-                      # roof reaches 3mm inside the tip and grips the full 3mm lip.
+roof_capture = 1.5    # Lock grip: roof overhang depth past the lug tip (mm). The roof
+                      # inner radius (52 - 1.5 = 50.5) stays OUTSIDE the plate radius (50):
+                      # the roof can never trap against the plate, so the mount detaches
+                      # (reverse-twist to rot -21 then pull). It grips the shelf's outer
+                      # 1.5mm band (r 50.5..52) on pullout instead of the full 3mm lip.
 ch_groove_bot = 11.5  # Groove floor (mount-local z); 0.5mm clear below the lip bottom (z 12.0)
 ch_groove_top = 14.0  # Groove ceiling / roof bottom (mount-local z); seat clearance 0.8mm over lip top (13.2)
 ch_block_top = 15.0   # Channel block top / roof top (mount-local z) = ceiling plane; roof thickness 1.0
@@ -76,20 +82,25 @@ disc_pocket_outer = 48.0  # Pocket outer radius: leaves a solid ring to the wall
 
 # Derived lock geometry (keep the channels glued to the actual lug at any scale):
 # lug_tip_r is the lug's outermost radius; the lug is a low SHELF (r lug_step_r..tip,
-# lip_h tall) with no upper rib, so the roof (inner radius = lug_tip_r - roof_capture)
-# can overhang 3mm inside the tip and grip the whole shelf lip without grazing.
+# lip_h tall) with no upper rib. lug_step_r is decoupled from roof_capture and overlaps
+# the plate ring (r 49..50) so the base stays ONE solid. The roof (inner radius =
+# lug_tip_r - roof_capture = 50.5) overhangs 1.5mm inside the tip and grips the shelf's
+# outer band; it sits OUTSIDE the plate radius so the mount can always detach.
 lug_tip_r = plate_radius + lock_protrusion   # 52: lug tip radius (mm)
-lug_step_r = lug_tip_r - roof_capture        # 49: shelf lip inner radius (mm)
-ch_roof_in = lug_tip_r - roof_capture        # Roof overhang inner radius (mm)
+lug_step_r = plate_radius - 1.0              # 49: shelf lip inner radius (mm); overlaps the
+                                             #     plate ring so the base fuses into ONE solid
+ch_roof_in = lug_tip_r - roof_capture        # 50.5: roof overhang inner radius (mm), OUTSIDE the
+                                             #     plate radius (50) -> free detach (radial-trap fix)
 ch_wall_in = lug_tip_r + ch_clear            # Channel outer-wall inner radius (mm)
 ch_bury = 0.15            # Channel burial into the wall ring past ch_wall_in (mm):
                           # the roof + back-wall slab genuinely overlap the solid wall
                           # ring so mount_plate() fuses into ONE solid (no coincident
                           # faces -> the slicer sees the skirt cavity, not solid infill)
 
-# Plate top-rim relief: the roof (r ch_roof_in..) and its pullout travel sit inside
-# the plate radius, so the ceiling-side rim is cut back to relief_in over the three
-# channel arcs (angular span = the roof's full drop->seat rotation sweep, plate-local).
+# Plate top-rim relief: retained from the 3mm-grip design even though the roof now
+# sits outside the plate radius (ch_roof_in 50.5) and no longer needs the room —
+# kept so the base geometry is unchanged and the detach change stays minimal. It
+# still lightens the rim over the three channel arcs (no mechanical role today).
 relief_in = lug_step_r - 0.2              # 48.8: relief inner radius (mm)
 relief_z_lo = lip_h                       # 1.2: shelf top; relief spans z 1.2..3
 relief_ang_lo = ch_back_wall + ch_ang_rot # -20.5: roof fold-local at drop, plate-local
@@ -192,9 +203,9 @@ def lock_lug():
     """One monolithic twist-lock lug centred on +X, on the plate rim.
 
     Profile (r-z): a 3mm-wide shelf (r lug_step_r..lug_tip_r = 49..52), lip_h
-    (1.2) tall, on the plate's light-side face. The roof overhangs 3mm past the
-    tip and grips the shelf's top face on pullout; there is no upper rib (the
-    roof occupies that z-band), so the back-wall stop acts on the shelf's back
+    (1.2) tall, on the plate's light-side face. The roof overhangs 1.5mm past the
+    tip and grips the shelf's outer 1.5mm band on pullout; there is no upper rib
+    (the roof occupies that z-band), so the back-wall stop acts on the shelf's back
     face. Built by revolving the r-z profile over the lug's angular span
     (`lug_width` mm of arc at the rim) - a single clean solid, no cylindric_bend
     slices. The shelf overlaps the plate ring (r 49..50) so the base boolean is

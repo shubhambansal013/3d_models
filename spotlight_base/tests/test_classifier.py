@@ -51,14 +51,15 @@ MOUNT_EXPECTED = [
     (0.0, 0.0, -12.0, False),       # no boss below the disc (removed by design)
     (0.0, 0.0, -11.0, False),       # pilot-hole void (through the disc)
     (12.0, 0.0, -9.0, False),       # wire-exit hole (r=4 at r=12 offset)
-    (52.0, 0.0, 4.0, True),         # channel roof (ch_roof_in=49, roof at z 4..5)
+    (52.0, 0.0, 4.0, True),         # channel roof (ch_roof_in=50.5, roof at z 4..5)
     (52.0, 0.0, 4.5, True),         # channel roof upper
     (52.0, 0.0, 5.2, False),        # above the roof top (ch_block_top + mount_offset_z = 5)
     (52.0, 0.0, 1.5, False),        # groove void (floor at z 1.5)
     (51.5, 0.0, 1.5, False),        # groove void, inner part (inside roof)
-    (51.0, 0.0, 4.0, True),         # roof overhang reaches r 49 (was void before)
-    (49.5, 0.0, 4.5, True),         # roof inner band (r>=49, z 4..5)
-    (48.0, 0.0, 4.5, False),        # just inside the roof -> void
+    (51.0, 0.0, 4.0, True),         # roof overhang reaches r 50.5 (was void before)
+    (50.2, 0.0, 4.5, False),        # just outside the roof inner edge (r<50.5) -> void
+    (49.5, 0.0, 4.5, False),        # roof no longer reaches inside the plate radius
+    (48.0, 0.0, 4.5, False),        # void (r < roof inner radius)
     (49.0, 0.0, 3.5, False),        # below the roof bottom -> groove void
     (51.4, -10.5, 1.5, True),       # back-wall slab (assembly ang -10.5°)
     (50.0, 12.0, 1.5, False),       # front of the channel (assembly ang ~ 12°)

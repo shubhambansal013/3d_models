@@ -32,6 +32,21 @@ def test_seat_clearance_minimum():
     assert seat_clear >= 0.6
 
 
+def test_sliding_clearance_in_sliding_range():
+    # the lug tip rides the channel outer wall through the whole twist; 0.2 mm
+    # was press/snap and bound under FDM drift (the "hard to attach/detach"
+    # bug). Sliding twist locks need 0.3-0.4 mm. Gate it here AND on the mesh
+    # (test_twist_fit.py) so a regression fails instantly.
+    assert 0.30 <= sb.ch_clear <= 0.50
+
+
+def test_roof_clearance_in_range():
+    # roof bottom clears the lip top by 0.6-1.0 mm: enough to seat/travel, not
+    # so much the mount rattles on its roof catch.
+    seat_clear = (sb.ch_groove_top + sb.mount_offset_z) - (2.0 + sb.lip_h)
+    assert 0.60 <= seat_clear <= 1.00
+
+
 def test_cap_covers_base():
     assert sb.cap_radius - sb.lug_tip_r >= 1.5
 
@@ -41,16 +56,23 @@ def test_assembly_z_invariant():
                - (2 + sb.plate_thickness)) < 1e-9
 
 
-def test_lock_grip_is_3mm():
-    # the requested lock grip: the roof overhangs 3mm past the lug tip
-    assert abs(sb.roof_capture - 3.0) < 1e-9
+def test_lock_grip_is_1_5mm():
+    # the requested lock grip: the roof overhangs 1.5mm past the lug tip
+    assert abs(sb.roof_capture - 1.5) < 1e-9
 
 
-def test_shelf_lip_is_fully_captured():
-    # the roof inner radius reaches the shelf lip inner edge (lug_step_r), so
-    # the whole 3mm lip is the catch surface
-    assert abs(sb.ch_roof_in - sb.lug_step_r) < 1e-9
-    assert sb.lug_tip_r - sb.lug_step_r > 1.5
+def test_shelf_outer_band_is_captured():
+    # the roof grips the shelf's outer roof_capture band (r ch_roof_in..tip)
+    assert abs(sb.lug_tip_r - sb.ch_roof_in - sb.roof_capture) < 1e-9
+    assert sb.roof_capture >= 1.0, "grip must stay meaningful"
+    assert sb.lug_tip_r - sb.lug_step_r > sb.roof_capture, "shelf must extend past the roof grip"
+
+
+def test_roof_clears_plate_radius():
+    # RADIAL-TRAP GATE: the roof inner radius must stay OUTSIDE the plate radius,
+    # else the roof embeds in the plate rim and the mount can never detach (the
+    # 3mm-grip regression). Keeps >= 0.3mm radial clearance to the plate rim.
+    assert sb.ch_roof_in > sb.plate_radius + 0.3
 
 
 def test_relief_clears_roof():
