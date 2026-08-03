@@ -58,7 +58,10 @@ cap_chamfer = 0.4     # Bottom-edge chamfer on the disc/wall corner (mm). A stra
                       # chamfer (not the old 2mm curved lip) so the full-perimeter
                       # bottom overhang / support requirement disappears.
 ch_ang_rot = -10      # Channel fold-copy axis rotation (deg)
-ch_clear = 0.2        # Radial clearance to the lug tip face (mm)
+ch_clear = 0.4        # Radial sliding clearance to the lug tip face (mm). The
+                      # lug tip rides the channel outer wall through the whole
+                      # twist; 0.2 mm was press/snap and FDM drift bound all
+                      # three lugs. 0.4 mm is the sliding-twist range.
 ch_back_wall = -10.5  # Groove back wall (fold-local deg): mount-local -20.5, lug stop at rot ~12
 ch_front = 22.0       # Groove open entrance (fold-local deg): mount-local +12, clears lug entry at drop
 ch_roof_end = 22.0    # Roof front edge (fold-local deg): lip captured from drop through seat
@@ -295,8 +298,8 @@ def rim_channel():
     """One groove: outer wall ring + roof overhang (back 10deg) + back-wall slab.
     The roof and back-wall slab extend ch_bury past ch_wall_in into the solid wall
     ring, guaranteeing a true boolean union with the cap shell."""
-    r_groove_in = plate_radius + ch_clear      # 50.2
-    r_wall = ch_wall_in                        # 52.2
+    r_groove_in = plate_radius + ch_clear      # 50.4
+    r_wall = ch_wall_in                        # 52.4
     r_outer = cap_radius
 
     a = annular_segment(r_wall, r_outer, ch_groove_bot, ch_block_top, ch_back_wall, ch_front)
@@ -367,9 +370,9 @@ if __name__ == "__main__":
 
     # Pass each part as a separate argument with a label
     show(mount, base, names=["Mount", "Base Plate"])
-    cq.exporters.export(cq.Workplane(obj = mount), "/home/ubuntu/workspace/models/spotlight_base/output/mount.stl")
-    cq.exporters.export(cq.Workplane(obj = base), "/home/ubuntu/workspace/models/spotlight_base/output/base.stl")
-    cq.exporters.export(cq.Workplane(obj = mount), "/home/ubuntu/workspace/models/spotlight_base/output/mount.step")
-    cq.exporters.export(cq.Workplane(obj = base), "/home/ubuntu/workspace/models/spotlight_base/output/base.step")
+    cq.exporters.export(cq.Workplane(obj = mount), "/home/ubuntu/workspace/models/spotlight_base/output/mount.stl", unit='MM', tolerance=0.01)
+    cq.exporters.export(cq.Workplane(obj = base), "/home/ubuntu/workspace/models/spotlight_base/output/base.stl", unit='MM', tolerance=0.01)
+    cq.exporters.export(cq.Workplane(obj = mount), "/home/ubuntu/workspace/models/spotlight_base/output/mount.step", unit='MM', tolerance=0.01)
+    cq.exporters.export(cq.Workplane(obj = base), "/home/ubuntu/workspace/models/spotlight_base/output/base.step", unit='MM', tolerance=0.01)
     print("Exported. Mount volume:", mount.Volume())
     print("Exported. Base volume:", base.Volume())

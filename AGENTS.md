@@ -41,7 +41,7 @@ pending plans remain.
   `lock_height` (3), `lip_h` (1.2), `roof_capture` (3 — the lock grip).
   Derived: `lug_tip_r = plate_radius + lock_protrusion` (52),
   `lug_step_r = ch_roof_in = lug_tip_r − roof_capture` (49),
-  `ch_wall_in = lug_tip_r + ch_clear` (52.2), and
+  `ch_wall_in = lug_tip_r + ch_clear` (52.4), and
   `ch_bury` (0.15) — the burial that makes `mount_plate()` fuse the channels
   into ONE solid. The plate's ceiling-side rim is relieved to `relief_in`
   (48.8) over the three channel arcs so the roof overhang seats.

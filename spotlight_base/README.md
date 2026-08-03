@@ -17,7 +17,7 @@ The channel stays aligned to the actual lugs through derived radii:
 lug_tip_r = plate_radius + lock_protrusion  # 52
 lug_step_r = lug_tip_r - roof_capture       # 49  (shelf lip inner radius)
 ch_roof_in = lug_tip_r - roof_capture       # 49  (roof overhang inner radius)
-ch_wall_in = lug_tip_r + ch_clear            # 52.2
+ch_wall_in = lug_tip_r + ch_clear            # 52.4
 ch_bury   = 0.15                             # channel burial into the wall ring
 relief_in = lug_step_r - 0.2                 # 48.8 (plate top-rim relief)
 ```
@@ -54,6 +54,7 @@ hours of print time).
 | Channel roof bottom, seated assembly frame | z=4.0 mm |
 | Channel roof inner radius | 49 mm (3 mm overhang past the tip) |
 | Seat roof clearance | 0.8 mm |
+| Lug-tip ↔ channel-wall sliding clearance | 0.4 mm (`ch_clear`, was 0.2 — that press/snap gap bound the twist under FDM drift) |
 | Channel roof thickness | 1.0 mm |
 | Back-wall stop onset | approximately `rot=11.5–12°` (free through ~11.5 after the back-wall enlargement) |
 | Pullout roof catch | approximately 0.8 mm mount drop (roof meets the 3 mm shelf lip top) |
