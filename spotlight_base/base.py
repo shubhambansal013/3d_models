@@ -6,7 +6,7 @@ Base plate (ceiling side): O100 annulus screwed flat to the real ceiling
 twist-lock. Mount plate (light side): O108 cap that twists ~10deg over the base
 rim, 2mm disc (1mm cup-side pocket) + 13mm skirt; the spotlight screws onto the
 flat disc (no central boss). Channels retuned to the phase-1 lugs
-(roof captures the 1.2mm lip; back-wall stop at rot ~12.5).
+(roof captures the 1.2mm lip; back-wall stop at rot ~12).
 """
 import math
 import cadquery as cq
@@ -55,10 +55,12 @@ root_fillet = 0.8         # Fillet radius where the lug meets the plate rim (mm)
 cap_radius = 54.0     # O108/2: cap disc and skirt outer radius (mm); 2mm overhang hides the lug edge
 cap_disc_h = 2.0      # Disc thickness (light-side mounting face) (mm)
 cap_skirt_h = 13.0    # Skirt depth (mm)
-cap_fillet_r = 2.0    # Fillet radius on disc/wall junction (mm)
+cap_chamfer = 0.4     # Bottom-edge chamfer on the disc/wall corner (mm). A straight
+                      # chamfer (not the old 2mm curved lip) so the full-perimeter
+                      # bottom overhang / support requirement disappears.
 ch_ang_rot = -10      # Channel fold-copy axis rotation (deg)
 ch_clear = 0.2        # Radial clearance to the lug tip face (mm)
-ch_back_wall = -10.5  # Groove back wall (fold-local deg): mount-local -20.5, lug stop at rot ~12.5
+ch_back_wall = -10.5  # Groove back wall (fold-local deg): mount-local -20.5, lug stop at rot ~12
 ch_front = 22.0       # Groove open entrance (fold-local deg): mount-local +12, clears lug entry at drop
 ch_roof_end = 22.0    # Roof front edge (fold-local deg): lip captured from drop through seat
 roof_capture = 0.5    # Roof overhang depth past the lug tip (mm); == lug_tip_r - lug_step_r
@@ -71,7 +73,7 @@ disc_pocket_outer = 48.0  # Pocket outer radius: leaves a solid ring to the wall
 
 # Derived lock geometry (keep the channels glued to the actual lug at any scale):
 # lug_tip_r is the lug's outermost radius; the root stays full-height out to
-# lug_step_r so the phase-2 roof (inner radius = lug_tip_r - roof_capture = 51.4)
+# lug_step_r so the phase-2 roof (inner radius = lug_tip_r - roof_capture = 51.5)
 # clears the full-height root and only captures the 1.2mm lip.
 lug_tip_r = plate_radius + lock_protrusion   # 52: lug tip radius (mm)
 lug_step_r = lug_tip_r - 0.5                 # 51.5: full-height root radius, lip starts past this
@@ -79,6 +81,10 @@ lug_overlap = 0.5             # Lug root buried this far into the plate rim (mm)
 lug_root_r = plate_radius - lug_overlap      # 49.5: guarantees a true boolean union
 ch_roof_in = lug_tip_r - roof_capture   # Roof overhang inner radius (mm)
 ch_wall_in = lug_tip_r + ch_clear       # Channel outer-wall inner radius (mm)
+ch_bury = 0.15            # Channel burial into the wall ring past ch_wall_in (mm):
+                          # the roof + back-wall slab genuinely overlap the solid wall
+                          # ring so mount_plate() fuses into ONE solid (no coincident
+                          # faces -> the slicer sees the skirt cavity, not solid infill)
 
 # Angular half-span of one lug about its center (arc mm -> rad at the rim).
 lug_arc_angle = math.degrees(lug_width / plate_radius)
@@ -264,17 +270,15 @@ def base_plate():
 # Mount plate (light side, female socket)
 # ============================================================
 
-def cap_lip_fillet():
-    """Rounded bottom lip: carves a quarter-disc of radius cap_fillet_r off the
-    disc/wall corner (subtractive helper, rotate_extrude of a profile)."""
+def cap_lip_chamfer():
+    """Chamfered bottom lip: carves a 45-degree wedge of size cap_chamfer off the
+    disc/wall corner (subtractive helper, rotate_extrude of a profile). A straight
+    chamfer prints without the full-perimeter bottom overhang the old 2mm curved
+    lip caused, and counters elephant's foot on the light-side edge."""
     eps = 0.1
-    r = cap_radius + eps
-    n = math.ceil(FN / 4)
-    pts = [(r, -eps)]
-    for i in range(0, n + 1):
-        a = 180 - 90 * i / n
-        pts.append((r + cap_fillet_r * math.cos(math.radians(a)),
-                     -eps + cap_fillet_r * math.sin(math.radians(a))))
+    c = cap_chamfer
+    r = cap_radius
+    pts = [(r + eps, -eps), (r, c), (r - c, 0.0)]
     return revolve_profile(pts, 360)
 
 
@@ -294,14 +298,16 @@ def annular_segment(r1, r2, z1, z2, a1, a2):
 
 
 def rim_channel():
-    """One groove: outer wall ring + roof overhang (back 10deg) + back-wall slab."""
-    r_groove_in = plate_radius + ch_clear      # 75.2
-    r_wall = ch_wall_in                        # 76.45
+    """One groove: outer wall ring + roof overhang (back 10deg) + back-wall slab.
+    The roof and back-wall slab extend ch_bury past ch_wall_in into the solid wall
+    ring, guaranteeing a true boolean union with the cap shell."""
+    r_groove_in = plate_radius + ch_clear      # 50.2
+    r_wall = ch_wall_in                        # 52.2
     r_outer = cap_radius
 
     a = annular_segment(r_wall, r_outer, ch_groove_bot, ch_block_top, ch_back_wall, ch_front)
-    b = annular_segment(ch_roof_in, r_wall, ch_groove_top, ch_block_top, ch_back_wall, ch_roof_end)
-    c = annular_segment(r_groove_in, r_wall, ch_groove_bot, ch_groove_top, ch_back_wall - 0.5, ch_back_wall + 1)
+    b = annular_segment(ch_roof_in, r_wall + ch_bury, ch_groove_top, ch_block_top, ch_back_wall, ch_roof_end)
+    c = annular_segment(r_groove_in, r_wall + ch_bury, ch_groove_bot, ch_groove_top, ch_back_wall - 0.5, ch_back_wall + 1)
     return a.fuse(b).fuse(c)
 
 
@@ -327,7 +333,7 @@ def mount_plate():
     disc_pocket = cyl(disc_pocket_outer, disc_pocket_depth + 1, z0=cap_disc_h - disc_pocket_depth) \
         .cut(cyl(disc_pocket_inner, disc_pocket_depth + 2, z0=cap_disc_h - disc_pocket_depth))
 
-    solid = solid.cut(hollow).cut(pilot).cut(wire_hole).cut(disc_pocket).cut(cap_lip_fillet())
+    solid = solid.cut(hollow).cut(pilot).cut(wire_hole).cut(disc_pocket).cut(cap_lip_chamfer())
     solid = solid.fuse(lock_channel())
     return solid
 

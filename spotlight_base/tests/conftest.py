@@ -5,8 +5,7 @@ at z = mount_offset_z (=-10). Tests never compute offsets themselves; they
 use base_contains / mount_contains only.
 
 Containment is exact OCC B-Rep classification (BRepClass3d_SolidClassifier)
-against the cached fused solids — the only tool proven correct on this
-model's double-walled tessellation (see spotlight_base/README.md).
+against the cached fused solids — the only tool proven correct on this model.
 """
 import math
 import os
@@ -106,7 +105,7 @@ def base_probe():
 @pytest.fixture(scope="session")
 def mount_probe():
     solids = _load_solids(MOUNT_CACHE)
-    assert len(solids) == 4, "mount_fused.brep should be cap + 3 channel solids"
+    assert len(solids) == 1, "mount_fused.brep should be one fused solid"
     v = sum(_solid_volume_cm3(s) for s in solids)
     assert 17.0 < v < 22.0, (
         f"mount cache volume {v:.2f} cm3 out of range (expect ~18.0). "

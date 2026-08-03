@@ -7,8 +7,8 @@ Run after any geometry-affecting change to base.py:
     python -m pytest spotlight_base/tests -q
 
 The contract (enforced by tests/conftest.py):
-  - .cache/base_fused.brep  -> 1 solid,  ~14.7 cm3
-  - .cache/mount_fused.brep -> 4 solids, ~19.5 cm3
+  - .cache/base_fused.brep  -> 1 solid,  ~14.6 cm3
+  - .cache/mount_fused.brep -> 1 solid, ~18.0 cm3
 """
 import os
 import sys
@@ -33,7 +33,7 @@ def main():
     print("Base plate: single fused solid (monolithic lugs, no slices) ...")
     _write(sb.base_plate(), os.path.join(CACHE_DIR, "base_fused.brep"))
 
-    print("Mount plate: cap + 3 channels (4 solids kept separate) ...")
+    print("Mount plate: single fused solid (channels buried ch_bury into the wall ring) ...")
     _write(sb.mount_plate(), os.path.join(CACHE_DIR, "mount_fused.brep"))
 
 

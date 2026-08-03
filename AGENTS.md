@@ -13,9 +13,9 @@ python -m pytest spotlight_base/tests -q        # ~8 s, must stay < 60 s
 
 The suite is the only trusted verification. It probes the cached fused solids
 (`spotlight_base/.cache/base_fused.brep` = 1 solid 14.63 cm³, `mount_fused.brep`
-= 4 solids 18.03 cm³) with OCC `BRepClass3d_SolidClassifier` — the only tool
-correct on this model's double-walled tessellation. Total modeled volume is
-32.66 cm³, approximately 40.5 g at PLA density 1.24 g/cm³. **Do not use
+= 1 solid 18.92 cm³) with OCC `BRepClass3d_SolidClassifier` — the only tool
+correct on this model. Total modeled volume is
+33.55 cm³, approximately 41.6 g at PLA density 1.24 g/cm³. **Do not use
 trimesh / pymeshfix / manifold3d** (all proven wrong; removed from the venv).
 
 Tiers: `test_parameters.py` (pure-arithmetic invariants) → `test_classifier.py`
@@ -41,11 +41,14 @@ pending plans remain.
   `lock_height` (3), `lip_h` (1.2), `root_fillet` (0.8). Derived:
   `lug_tip_r = plate_radius + lock_protrusion` (52),
   `ch_roof_in = lug_tip_r − roof_capture` (51.5), and
-  `ch_wall_in = lug_tip_r + ch_clear` (52.2). `rim_channel()` +
-  `mount_plate()` must keep using the derived radii.
+  `ch_wall_in = lug_tip_r + ch_clear` (52.2), and
+  `ch_bury` (0.15) — the burial that makes `mount_plate()` fuse the channels
+  into ONE solid. `rim_channel()` + `mount_plate()` must keep using the
+  derived radii.
 - Cap: `cap_radius` (54, Ø108), `cap_disc_h` (2), `cap_skirt_h` (13),
-  `ch_*` (channel groove angles/radii). Cup-side disc pocket
-  `disc_pocket_*` (r8–48, 1 mm deep, 1 mm floor).
+  `cap_chamfer` (0.4 bottom-edge chamfer), `ch_*` (channel groove
+  angles/radii). Cup-side disc pocket `disc_pocket_*` (r8–48, 1 mm deep,
+  1 mm floor).
 
 ## Design notes
 
@@ -53,7 +56,8 @@ pending plans remain.
   at 0°/120°/240°. Channels sit 10° behind (`ch_ang_rot = -10`): drop-on at
   `rot=0`, seat at `rot=10`.
 - **Measured (via the OCC kernel, 2026-08-02):** lug center 0°, tip r=52,
-  back-wall stop onset `rot≈12–13°`, pullout roof catch at mount drop
+  back-wall stop onset `rot≈11.5–12°` (after the back-wall enlargement),
+  pullout roof catch at mount drop
   approximately 1.0–1.5 mm in the sparse probe, seat roof clearance 0.8 mm.
   The tilt probes pass at -0.5 mm and +0.3 mm assembly shifts.
 - Mount has **no central boss**. The spotlight mounts on the flat disc; Ø2.9

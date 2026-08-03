@@ -7,7 +7,8 @@ so we sample base (lug) material in exactly that window (3x3x3 points =
 bounded). Lug material there means the back wall is up against the lug.
 
 Measured via the kernel (2026-08-02): free through rot ~11.5, blocked from
-rot ~12.5 (NOT the handoff's ~18 — that was a failed-session artifact).
+rot ~12.0 (onset moved ~0.5 deg earlier after the back-wall enlargement;
+NOT the handoff's ~18 — that was a failed-session artifact).
 """
 import math
 
@@ -37,7 +38,7 @@ def _back_wall_base_hits(base_contains, rot):
 
 def test_free_travel_at_seat(lug_points, mount_contains):
     assert sum(mount_contains(lug_points, rot=SEAT_ROT)) == 0
-    assert sum(mount_contains(lug_points, rot=SEAT_ROT + 2)) == 0
+    assert sum(mount_contains(lug_points, rot=SEAT_ROT + 1)) == 0
 
 
 def test_back_wall_stop_free_before_onset(base_contains):
